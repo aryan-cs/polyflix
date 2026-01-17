@@ -7,7 +7,7 @@ const DEFAULT_HEADERS = {
   "Accept": "application/json",
 };
 
-// Tag IDs - you may need to find the correct ones for each category
+// Tag IDs - you may need to find the correct ones for each category!
 const TAG_IDS = {
   sports: 233,      // Adjust based on actual API
   crypto: 235,

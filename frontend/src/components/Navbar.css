@@ -121,10 +121,133 @@
   fill: #b3b3b3;
 }
 
-.navbar__notifications {
-  font-size: 24px;
+.navbar__notifications-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.navbar__notifications-icon {
   cursor: pointer;
-  transition: transform 0.3s ease;
+}
+
+.navbar__notifications-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #e50914;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.navbar__notifications-dropdown {
+  position: absolute;
+  top: 45px;
+  right: -10px;
+  width: 400px;
+  max-height: 500px;
+  background-color: rgba(0, 0, 0, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  z-index: 1001;
+  animation: fadeIn 0.3s ease-in-out forwards;
+}
+
+.navbar__notifications-dropdown--closing {
+  animation: fadeOut 0.3s ease-in-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.navbar__notifications-dropdown::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  right: 20px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid rgba(255, 255, 255, 0.15);
+}
+
+.navbar__notifications-list {
+  max-height: 450px;
+  overflow-y: auto;
+}
+
+.navbar__notification-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.navbar__notification-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-left-color: #e50914;
+}
+
+.navbar__notification-item img {
+  width: 112px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.navbar__notification-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.navbar__notification-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  line-height: 1.3;
+}
+
+.navbar__notification-description {
+  font-size: 13px;
+  color: #999;
+  line-height: 1.4;
+}
+
+.navbar__notification-time {
+  font-size: 12px;
+  color: #666;
+  margin-top: 2px;
 }
 
 .navbar__avatar {

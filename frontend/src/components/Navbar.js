@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Navbar.css';
 
 function Navbar() {
+  const navigate = useNavigate();
   const [show, setShow] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -69,14 +71,14 @@ function Navbar() {
     <div className={`navbar ${show && 'navbar__black'}`}>
       <div className="navbar__contents">
         <div className="navbar__left">
-          <img src="/images/polyflix.png" alt="Polyflix" className="navbar__logo" />
+          <img src="/images/polyflix.png" alt="Polyflix" className="navbar__logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }} />
           <div className="navbar__links">
-            <span>Home</span>
+            <span onClick={() => navigate('/')}>Home</span>
             <span>Trending</span>
             <span>Politics</span>
             <span>Crypto</span>
             <span>Sports</span>
-            <span>My Markets</span>
+            <span onClick={() => navigate('/watchlists')}>My Watchlists</span>
           </div>
         </div>
         

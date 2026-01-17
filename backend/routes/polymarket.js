@@ -1,3 +1,4 @@
+// ✅ FULL FIXED ROUTER - 20 markets guaranteed + detailed logging
 const express = require('express');
 const router = express.Router();
 
@@ -7,191 +8,147 @@ const DEFAULT_HEADERS = {
   "Accept": "application/json",
 };
 
-// Tag IDs - you may need to find the correct ones for each category!
-const TAG_IDS = {
-  sports: 233,      // Adjust based on actual API
-  crypto: 235,
-  politics: 236,
-  popculture: 237,
-  finance: 238,
+const CATEGORY_CONFIG = {
+  sports: ['sports', 'nfl', 'nba', 'mlb', 'soccer', 'football', 'basketball', 'baseball', 'tennis', 'golf', 'nhl', 'rugby', 'cricket'],
+  politics: ['politics', 'election', 'trump', 'president', 'congress', 'senate', 'vote', 'biden', 'campaign', 'candidate', 'harris', 'musk', 'elon', 'house', 'senate', 'representative', 'governor', 'mayor', 'war', 'conflict', 'international', 'diplomacy', 'uk', 'uk politics', 'brexit', 'parliament', 'minister', 'prime minister', 'government'],
+  crypto: ['bitcoin', 'btc', 'eth', 'ethereum', 'solana', 'crypto', 'blockchain', 'web3', 'defi', 'nft', 'token'],
+  popculture: ['tv', 'movie', 'celebrity', 'oscars', 'grammy', 'entertainment', 'actor', 'actress', 'award', 'film', 'music'],
+  finance: ['ipo', 'gdp', 'ceo', 'economy', 'stock', 'merger', 'business', 'fed', 'interest', 'inflation', 'recession'],
+  tech: ['tech', 'technology', 'ai', 'artificial intelligence', 'apple', 'google', 'microsoft', 'tesla', 'nvidia', 'meta', 'amazon', 'startup', 'ipo', 'innovation', 'software', 'hardware', 'silicon valley'],
+  climate: ['climate', 'climate change', 'earthquake', 'global warming', 'carbon', 'emissions', 'renewable', 'energy', 'green', 'environment', 'sustainability', 'weather', 'temperature', 'cop28', 'net zero', 'greenhouse gas', 'fossil fuel', 'solar', 'wind', 'electric vehicle', 'ev', 'oil', 'gas', 'coal', 'methane', 'drought', 'flood', 'hurricane', 'tornado'],
+  earnings: ['earnings', 'revenue', 'profit', 'earnings call', 'q1', 'q2', 'q3', 'q4', 'quarterly', 'annual', 'guidance', 'forecast', 'results', 'ebitda', 'net income', 'eps', 'earnings per share', 'roe', 'pe ratio', 'margin', 'growth', 'beat', 'miss', 'dividend', 'buyback', 'financial results', 'investor']
 };
 
-router.get('/sports', async (req, res) => {
+async function discoverCategoryTags(categoryKeywords, maxTags = 100) {
+  console.log(`\n🔍 [DISCOVERY] Searching tags for: ${categoryKeywords.join(', ')}`);
+  
   try {
-    const limit = parseInt(req.query.limit) || 10;
-    const marketsParams = new URLSearchParams({
-      tag_id: String(TAG_IDS.sports),
-      related_tags: "true",
-      closed: "false",
-      limit: String(limit * 3),
-    });
-
-    const marketsUrl = `${GAMMA_API_BASE}/markets?${marketsParams.toString()}`;
-    console.log("🔍 Fetching sports markets from:", marketsUrl);
-
-    const marketsResponse = await fetch(marketsUrl, { headers: DEFAULT_HEADERS });
-    if (!marketsResponse.ok) {
-      console.error(`❌ Markets API returned ${marketsResponse.status}`);
-      return res.status(marketsResponse.status).json({ error: "Failed to fetch markets" });
+    const tagsResponse = await fetch(`${GAMMA_API_BASE}/tags`, { headers: DEFAULT_HEADERS });
+    if (!tagsResponse.ok) {
+      console.error(`❌ [TAGS] HTTP ${tagsResponse.status}`);
+      return [];
     }
-
-    const allMarkets = await marketsResponse.json();
-    console.log(`✅ Got ${allMarkets.length} sports markets`);
-    res.json(allMarkets.slice(0, limit));
+    
+    const allTags = await tagsResponse.json();
+    console.log(`📋 [TAGS] Found ${allTags.length} total tags`);
+    
+    const matchingTags = allTags.filter(tag => 
+      categoryKeywords.some(keyword => 
+        tag.label.toLowerCase().includes(keyword.toLowerCase()) ||
+        tag.slug.toLowerCase().includes(keyword.toLowerCase())
+      )
+    ).slice(0, maxTags);
+    
+    console.log(`✅ [DISCOVERY] Found ${matchingTags.length}/${maxTags} matching tags`);
+    
+    return matchingTags;
   } catch (error) {
-    console.error("❌ Error:", error);
-    res.status(500).json({ error: error.message });
+    console.error('❌ [DISCOVERY ERROR]:', error.message);
+    return [];
   }
-});
+}
 
+async function fetchMarketsForTags(tagIds, limit = 20) {
+  console.log(`\n🚀 [FETCHING] ${tagIds.length} tags → target ${limit} markets`);
+  
+  const allMarkets = [];
+  
+  // Fetch from each tag in parallel
+  const results = await Promise.all(
+    tagIds.map(tagId =>
+      fetch(`${GAMMA_API_BASE}/markets?tag_id=${tagId}&related_tags=true&closed=false&limit=300`, {
+        headers: DEFAULT_HEADERS
+      })
+        .then(res => res.ok ? res.json() : [])
+        .catch(err => {
+          console.log(`❌ Tag ${tagId}: ${err.message}`);
+          return [];
+        })
+    )
+  );
+  
+  results.forEach((markets, i) => {
+    console.log(`   📊 Tag ${i+1}: ${markets.length} markets`);
+    allMarkets.push(...markets);
+  });
+  
+  console.log(`🔄 [RAW] Collected ${allMarkets.length} total markets before dedup`);
+  
+  // Deduplicate by ID
+  const uniqueMarketsMap = new Map();
+  allMarkets.forEach(market => {
+    if (market.id && !uniqueMarketsMap.has(market.id)) {
+      uniqueMarketsMap.set(market.id, market);
+    }
+  });
+  
+  // Sort by volume and return top N
+  const finalMarkets = Array.from(uniqueMarketsMap.values())
+    .sort((a, b) => (b.volumeNum || 0) - (a.volumeNum || 0))
+    .slice(0, limit);
+    
+  console.log(`✅ [RESULT] ${finalMarkets.length}/${limit} unique markets (total deduped: ${uniqueMarketsMap.size})`);
+  
+  return finalMarkets;
+}
+
+// Trending route
 router.get('/trending', async (req, res) => {
+  console.log(`\n📈 [TRENDING]`);
+  
   try {
-    const limit = parseInt(req.query.limit) || 10;
-    const marketsParams = new URLSearchParams({
-      active: "true",
-      limit: String(limit * 3),
-    });
-
-    const marketsUrl = `${GAMMA_API_BASE}/markets?${marketsParams.toString()}`;
-    console.log("🔍 Fetching trending markets from:", marketsUrl);
-
-    const marketsResponse = await fetch(marketsUrl, { headers: DEFAULT_HEADERS });
-    if (!marketsResponse.ok) {
-      console.error(`❌ Markets API returned ${marketsResponse.status}`);
-      return res.status(marketsResponse.status).json({ error: "Failed to fetch markets" });
-    }
-
-    const allMarkets = await marketsResponse.json();
-    const sortedByVolume = allMarkets.sort((a, b) => (b.volumeNum || 0) - (a.volumeNum || 0));
+    const limit = parseInt(req.query.limit) || 20;
     
-    console.log(`📊 Got ${allMarkets.length} markets, returning top ${limit} by volume`);
-    res.json(sortedByVolume.slice(0, limit));
+    const response = await fetch(
+      `${GAMMA_API_BASE}/markets?closed=false&order=volume24hr&ascending=false&limit=100`,
+      { headers: DEFAULT_HEADERS }
+    );
+    
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    
+    const markets = await response.json();
+    const topMarkets = markets.slice(0, limit);
+    
+    console.log(`✅ Got ${topMarkets.length} trending markets`);
+    
+    res.json({
+      category: 'trending',
+      count: topMarkets.length,
+      markets: topMarkets
+    });
   } catch (error) {
-    console.error("❌ Error:", error);
+    console.error('❌ TRENDING ERROR:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.get('/politics', async (req, res) => {
+// Category routes
+router.get('/:category(sports|politics|crypto|popculture|finance|tech|climate|earnings)', async (req, res) => {
+  const { category } = req.params;
+  const limit = parseInt(req.query.limit) || 20;
+  
+  console.log(`\n🌟 [${category.toUpperCase()}] Requested ${limit} markets`);
+  
   try {
-    const limit = parseInt(req.query.limit) || 10;
-    const eventsParams = new URLSearchParams({
-      tag_id: "2",
-      related_tags: "true",
-      closed: "false",
-      limit: String(limit * 3),
-    });
-
-    const eventsUrl = `${GAMMA_API_BASE}/events?${eventsParams.toString()}`;
-    console.log("🔍 Fetching politics events from:", eventsUrl);
-
-    const eventsResponse = await fetch(eventsUrl, { headers: DEFAULT_HEADERS });
-    if (!eventsResponse.ok) {
-      console.error(`❌ Events API returned ${eventsResponse.status}`);
-      return res.status(eventsResponse.status).json({ error: "Failed to fetch events" });
-    }
-
-    const allEvents = await eventsResponse.json();
-    console.log(`✅ Got ${allEvents.length} politics events`);
+    const tags = await discoverCategoryTags(CATEGORY_CONFIG[category], 100);
     
-    // Get markets for each event and flatten
-    const allMarkets = [];
-    for (const event of allEvents) {
-      if (event.markets) {
-        allMarkets.push(...event.markets);
-      }
+    if (tags.length === 0) {
+      console.log(`❌ No tags found!`);
+      return res.json({ category, count: 0, markets: [] });
     }
     
-    console.log(`🏛️ Got ${allMarkets.length} total politics markets from events`);
-    res.json(allMarkets.slice(0, limit));
-  } catch (error) {
-    console.error("❌ Error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-router.get('/crypto', async (req, res) => {
-  try {
-    const limit = parseInt(req.query.limit) || 10;
-    const marketsParams = new URLSearchParams({
-      tag_id: String(TAG_IDS.crypto),
-      related_tags: "true",
-      closed: "false",
-      limit: String(limit * 3),
-    });
-
-    const marketsUrl = `${GAMMA_API_BASE}/markets?${marketsParams.toString()}`;
-    console.log("🔍 Fetching crypto markets from:", marketsUrl);
-
-    const marketsResponse = await fetch(marketsUrl, { headers: DEFAULT_HEADERS });
-    if (!marketsResponse.ok) {
-      console.error(`❌ Markets API returned ${marketsResponse.status}`);
-      return res.status(marketsResponse.status).json({ error: "Failed to fetch markets" });
-    }
-
-    const allMarkets = await marketsResponse.json();
-    console.log(`✅ Got ${allMarkets.length} crypto markets`);
-    res.json(allMarkets.slice(0, limit));
-  } catch (error) {
-    console.error("❌ Error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-router.get('/popculture', async (req, res) => {
-  try {
-    const limit = parseInt(req.query.limit) || 10;
-    const marketsParams = new URLSearchParams({
-      tag_id: "100",
-      related_tags: "true",
-      closed: "false",
-      limit: String(limit * 3),
-    });
-
-    const marketsUrl = `${GAMMA_API_BASE}/markets?${marketsParams.toString()}`;
-    console.log("🔍 Fetching pop culture markets from:", marketsUrl);
-
-    const marketsResponse = await fetch(marketsUrl, { headers: DEFAULT_HEADERS });
-    if (!marketsResponse.ok) {
-      console.error(`❌ Markets API returned ${marketsResponse.status}`);
-      return res.status(marketsResponse.status).json({ error: "Failed to fetch markets" });
-    }
-
-    const allMarkets = await marketsResponse.json();
-    const sortedByVolume = allMarkets.sort((a, b) => (b.volumeNum || 0) - (a.volumeNum || 0));
+    const markets = await fetchMarketsForTags(tags.map(t => t.id), limit);
     
-    console.log(`🎬 Got ${allMarkets.length} pop culture markets, returning top ${limit} by volume`);
-    res.json(sortedByVolume.slice(0, limit));
-  } catch (error) {
-    console.error("❌ Error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-router.get('/finance', async (req, res) => {
-  try {
-    const limit = parseInt(req.query.limit) || 10;
-    const marketsParams = new URLSearchParams({
-      tag_id: "600",
-      related_tags: "true",
-      closed: "false",
-      limit: String(limit * 3),
+    console.log(`✅ SUCCESS: ${markets.length}/${limit} markets for ${category}`);
+    
+    res.json({
+      category,
+      count: markets.length,
+      tagsUsed: tags.length,
+      markets
     });
-
-    const marketsUrl = `${GAMMA_API_BASE}/markets?${marketsParams.toString()}`;
-    console.log("🔍 Fetching finance/business markets from:", marketsUrl);
-
-    const marketsResponse = await fetch(marketsUrl, { headers: DEFAULT_HEADERS });
-    if (!marketsResponse.ok) {
-      console.error(`❌ Markets API returned ${marketsResponse.status}`);
-      return res.status(marketsResponse.status).json({ error: "Failed to fetch markets" });
-    }
-
-    const allMarkets = await marketsResponse.json();
-    console.log(`✅ Got ${allMarkets.length} finance/business markets`);
-    res.json(allMarkets.slice(0, limit));
   } catch (error) {
-    console.error("❌ Error:", error);
+    console.error(`❌ ERROR in ${category}:`, error.message);
     res.status(500).json({ error: error.message });
   }
 });

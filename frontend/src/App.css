@@ -1,0 +1,11 @@
+.app {
+  background-color: #141414;
+  min-height: 100vh;
+}
+
+.app__rows {
+  margin-top: -150px;
+  position: relative;
+  z-index: 10;
+  padding-bottom: 50px;
+}

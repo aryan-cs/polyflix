@@ -1,26 +1,30 @@
-@font-face {
-  font-family: 'Netflix Sans';
-  src: url('/fonts/NetflixSans-Regular.woff2') format('woff2'),
-       url('/fonts/NetflixSans-Regular.woff') format('woff');
-  font-weight: 400;
-  font-style: normal;
-}
+/* 
+  Uncomment when Netflix Sans fonts are added to public/fonts/ directory:
+  
+  @font-face {
+    font-family: 'Netflix Sans';
+    src: url('%PUBLIC_URL%/fonts/NetflixSans-Regular.woff2') format('woff2'),
+         url('%PUBLIC_URL%/fonts/NetflixSans-Regular.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+  }
 
-@font-face {
-  font-family: 'Netflix Sans';
-  src: url('/fonts/NetflixSans-Medium.woff2') format('woff2'),
-       url('/fonts/NetflixSans-Medium.woff') format('woff');
-  font-weight: 500;
-  font-style: normal;
-}
+  @font-face {
+    font-family: 'Netflix Sans';
+    src: url('%PUBLIC_URL%/fonts/NetflixSans-Medium.woff2') format('woff2'),
+         url('%PUBLIC_URL%/fonts/NetflixSans-Medium.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+  }
 
-@font-face {
-  font-family: 'Netflix Sans';
-  src: url('/fonts/NetflixSans-Bold.woff2') format('woff2'),
-       url('/fonts/NetflixSans-Bold.woff') format('woff');
-  font-weight: 700;
-  font-style: normal;
-}
+  @font-face {
+    font-family: 'Netflix Sans';
+    src: url('%PUBLIC_URL%/fonts/NetflixSans-Bold.woff2') format('woff2'),
+         url('%PUBLIC_URL%/fonts/NetflixSans-Bold.woff') format('woff');
+    font-weight: 700;
+    font-style: normal;
+  }
+*/
 
 * {
   margin: 0;

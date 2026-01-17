@@ -1,4 +1,4 @@
-# Polyflix - Netflix-Style Polymarket Dashboard
+# Polyflix
 
 A Netflix-inspired UI for browsing Polymarket prediction markets.
 

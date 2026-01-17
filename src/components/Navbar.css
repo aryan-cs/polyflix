@@ -2,8 +2,8 @@
   position: fixed;
   top: 0;
   width: 100%;
-  padding: 20px;
-  height: 70px;
+  padding: 0 70px;
+  height: 68px;
   z-index: 1000;
   transition: all 0.5s ease;
   background: linear-gradient(180deg, rgba(0,0,0,0.7) 10%, transparent);
@@ -18,36 +18,35 @@
   justify-content: space-between;
   align-items: center;
   max-width: 100%;
+  height: 100%;
   margin: 0 auto;
+  margin-top: 6px;
 }
 
 .navbar__left {
   display: flex;
   align-items: center;
-  gap: 30px;
+  gap: 50px;
 }
 
 .navbar__logo {
-  height: 35px;
+  height: 30px;
   cursor: pointer;
-  margin-right: 20px;
   transition: transform 0.3s ease;
-}
-
-.navbar__logo:hover {
-  transform: scale(1.05);
 }
 
 .navbar__links {
   display: flex;
   gap: 20px;
+  align-items: center;
 }
 
 .navbar__links span {
   color: #e5e5e5;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 16px;
+  font-weight: 400;
+  font-family: Netflix Sans, Helvetica, Arial, sans-serif;
   transition: color 0.3s ease;
 }
 

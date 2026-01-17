@@ -1,5 +1,7 @@
 import React from 'react';
 import './Banner.css';
+import TradeNowButton from './TradeNowButton';
+import MoreInfoButton from './MoreInfoButton';
 
 function Banner({ market }) {
   const truncate = (str, n) => {
@@ -19,12 +21,8 @@ function Banner({ market }) {
         <h1 className="banner__title">{market?.title}</h1>
         
         <div className="banner__buttons">
-          <button className="banner__button banner__button--play">
-            ▶ Trade Now
-          </button>
-          <button className="banner__button banner__button--info">
-            ℹ More Info
-          </button>
+          <TradeNowButton />
+          <MoreInfoButton />
         </div>
 
         <div className="banner__stats">
@@ -54,8 +52,6 @@ function Banner({ market }) {
           {truncate(market?.description, 200)}
         </h2>
       </div>
-
-      <div className="banner__fadeBottom" />
     </header>
   );
 }

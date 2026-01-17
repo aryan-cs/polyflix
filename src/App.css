@@ -9,16 +9,3 @@
   z-index: 10;
   padding-bottom: 50px;
 }
-
-/* Fade effect at top */
-.app__rows::before {
-  content: '';
-  position: absolute;
-  top: -150px;
-  left: 0;
-  right: 0;
-  height: 150px;
-  background: linear-gradient(to bottom, transparent, #141414);
-  z-index: 1;
-  pointer-events: none;
-}

@@ -1,0 +1,111 @@
+.navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  padding: 20px;
+  height: 70px;
+  z-index: 1000;
+  transition: all 0.5s ease;
+  background: linear-gradient(180deg, rgba(0,0,0,0.7) 10%, transparent);
+}
+
+.navbar__black {
+  background-color: #141414;
+}
+
+.navbar__contents {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.navbar__left {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.navbar__logo {
+  height: 35px;
+  cursor: pointer;
+  margin-right: 20px;
+  transition: transform 0.3s ease;
+}
+
+.navbar__logo:hover {
+  transform: scale(1.05);
+}
+
+.navbar__links {
+  display: flex;
+  gap: 20px;
+}
+
+.navbar__links span {
+  color: #e5e5e5;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.navbar__links span:hover {
+  color: #b3b3b3;
+}
+
+.navbar__right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.navbar__icon {
+  width: 24px;
+  height: 24px;
+  fill: white;
+  cursor: pointer;
+  transition: fill 0.3s ease;
+}
+
+.navbar__icon:hover {
+  fill: #b3b3b3;
+}
+
+.navbar__notifications {
+  font-size: 24px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.navbar__notifications:hover {
+  transform: scale(1.1);
+}
+
+.navbar__avatar {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.3s ease;
+}
+
+.navbar__avatar:hover {
+  transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+  .navbar__links {
+    display: none;
+  }
+  
+  .navbar__logo {
+    font-size: 24px;
+  }
+}

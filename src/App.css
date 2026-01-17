@@ -1,0 +1,24 @@
+.app {
+  background-color: #141414;
+  min-height: 100vh;
+}
+
+.app__rows {
+  margin-top: -150px;
+  position: relative;
+  z-index: 10;
+  padding-bottom: 50px;
+}
+
+/* Fade effect at top */
+.app__rows::before {
+  content: '';
+  position: absolute;
+  top: -150px;
+  left: 0;
+  right: 0;
+  height: 150px;
+  background: linear-gradient(to bottom, transparent, #141414);
+  z-index: 1;
+  pointer-events: none;
+}

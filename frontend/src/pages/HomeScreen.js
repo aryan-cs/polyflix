@@ -17,6 +17,7 @@ function App() {
   const [climateMarkets, setClimateMarkets] = useState([]);
   const [earningsMarkets, setEarningsMarkets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedMarket, setSelectedMarket] = useState(null);
 
   useEffect(() => {
     const fetchAllCategories = async () => {
@@ -68,39 +69,50 @@ function App() {
   return (
     <div className="app">
       <Navbar />
-      <Banner market={marketData.featured} />
+      <Banner
+        market={marketData.featured}
+        onMoreInfo={() => setSelectedMarket(marketData.featured)}
+      />
       
       <div className="app__rows">
         <MarketRow 
           title="Trending Markets" 
           markets={trendingMarkets.length > 0 ? trendingMarkets : marketData.trending} 
+          onSelectMarket={setSelectedMarket}
         />
         <MarketRow 
           title="Politics" 
           markets={politicsMarkets.length > 0 ? politicsMarkets : marketData.politics} 
+          onSelectMarket={setSelectedMarket}
         />
         <MarketRow 
           title="Crypto" 
           markets={cryptoMarkets.length > 0 ? cryptoMarkets : marketData.crypto} 
+          onSelectMarket={setSelectedMarket}
         />
         <MarketRow 
           title="Sports" 
           markets={sportsMarkets.length > 0 ? sportsMarkets : marketData.sports} 
+          onSelectMarket={setSelectedMarket}
         />
         <MarketRow 
           title="Pop Culture" 
           markets={popCultureMarkets.length > 0 ? popCultureMarkets : marketData.popCulture} 
+          onSelectMarket={setSelectedMarket}
         />
         <MarketRow 
           title="Finance" 
           markets={financeMarkets.length > 0 ? financeMarkets : marketData.business} 
+          onSelectMarket={setSelectedMarket}
         />
         <MarketRow 
           title="Tech" 
           markets={techMarkets.length > 0 ? techMarkets : []} 
+          onSelectMarket={setSelectedMarket}
         />
        
       </div>
+      <MarketModal market={selectedMarket} onClose={() => setSelectedMarket(null)} />
     </div>
   );
 }

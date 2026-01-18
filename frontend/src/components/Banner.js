@@ -30,7 +30,7 @@ function Banner({ market, onMoreInfo }) {
             optionA={market?.optionA || "Yes"} 
             optionB={market?.optionB || "No"} 
           />
-          <MoreInfoButton />
+          <MoreInfoButton onClick={onMoreInfo} />
         </div>
       </div>
       <div className="banner--fadeBottom" />

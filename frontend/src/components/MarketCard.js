@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './MarketCard.css';
+import realImage from './images3.svg';
 
 function MarketCard({ market, onSelectMarket }) {
   const [isHovered, setIsHovered] = useState(false);
@@ -105,9 +106,7 @@ function MarketCard({ market, onSelectMarket }) {
               <div className="marketCard__actions" onClick={(e) => e.stopPropagation()}>
                 <div className="marketCard__actions-left">
                   <button className="marketCard__control marketCard__control--primary" aria-label="Play">
-                    <svg viewBox="0 0 24 24" width="24" height="24" data-icon="PlayMedium" aria-hidden="true" fill="none">
-                      <path fill="currentColor" d="M5 2.7a1 1 0 0 1 1.48-.88l16.93 9.3a1 1 0 0 1 0 1.76l-16.93 9.3A1 1 0 0 1 5 21.31z"></path>
-                    </svg>
+                    <img src={realImage} alt="Play" style={{ width: '24px', height: '24px', filter: 'hue-rotate(0deg) saturate(0.3) brightness(1.2)' }} />
                   </button>
                   <button className="marketCard__control" aria-label="Add to My List">
                     <svg viewBox="0 0 24 24" width="24" height="24" data-icon="PlusMedium" aria-hidden="true" fill="none">

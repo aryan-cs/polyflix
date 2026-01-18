@@ -174,7 +174,7 @@
 }
 
 .marketCard__control--primary {
-  background: linear-gradient(90deg, #10b981 0%, #10b981 50%, #ef4444 50%, #ef4444 100%);
+  background: #ffffff;
   color: #ffffff;
   border: none;
 }
@@ -252,6 +252,10 @@
   color: #46d369;
   font-weight: 700;
   font-size: 14px;
+}
+
+.marketCard__control--primary img {
+  filter: saturate(0) brightness(1.5) !important;
 }
 
 @media (max-width: 768px) {

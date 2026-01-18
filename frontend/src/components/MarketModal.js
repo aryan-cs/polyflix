@@ -688,7 +688,7 @@ Only return the JSON array, nothing else.`
                     <div className="marketModal__ai-messages">
                       {aiMessages.length === 0 ? (
                         <div className="marketModal__ai-empty">
-                          <p>👋 Ask me anything about this market!</p>
+                          <p>Ask me anything about this market!</p>
                           <p style={{ fontSize: '0.9rem', color: '#888' }}>Questions, analysis, predictions...</p>
                         </div>
                       ) : (
@@ -711,8 +711,8 @@ Only return the JSON array, nothing else.`
                     </div>
 
                     {aiMessages.length === 0 && !aiLoading && (
-                      <div className="marketModal__ai-suggestions">
-                        <p className="marketModal__ai-suggestions-title">💡 Try asking:</p>
+                       <div className="marketModal__ai-suggestions">
+                        <p className="marketModal__ai-suggestions-title">Try asking:</p>
                         {suggestedQuestions.length > 0 ? (
                           suggestedQuestions.map((question, index) => (
                             <button
@@ -755,7 +755,7 @@ Only return the JSON array, nothing else.`
                 <div className="marketModal__tab-pane">
                   <h4>Watch Party</h4>
                   <div className="marketModal__chat-header-info">
-                    <span>👤 Joined as: <strong>{username}</strong></span>
+                    <span>Joined as: <strong>{username}</strong></span>
                     <button
                       className="marketModal__change-username-btn"
                       onClick={() => {

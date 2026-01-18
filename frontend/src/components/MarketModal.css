@@ -7,6 +7,7 @@
   justify-content: center;
   z-index: 1000;
   padding: 40px 20px;
+  font-family: 'Netflix Sans', 'Helvetica Neue', sans-serif;
 
   &::-webkit-scrollbar {
     display: none;
@@ -135,7 +136,7 @@
 }
 
 .marketModal__stat-value--yes {
-  color: #10b981;
+  color: #00a8ff;
 }
 
 .marketModal__stat-value--no {
@@ -177,7 +178,7 @@
 
 .marketModal__outcome-price {
   font-weight: 700;
-  color: #10b981;
+  color: #00a8ff;
 }
 
 .marketModal__cta {
@@ -536,7 +537,7 @@
   left: var(--tab-left);
   width: var(--tab-width);
   height: 3px;
-  background: linear-gradient(90deg, #00ff41, #00a8ff);
+  background: #00a8ff;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 2px;
 }
@@ -560,7 +561,7 @@
 }
 
 .marketModal__tab-btn.active {
-  color: #00ff41;
+  color: #00a8ff;
 }
 
 .marketModal__tabs-content {
@@ -575,8 +576,9 @@
 
 .marketModal__tab-pane h4 {
   margin: 0 0 10px 0;
-  color: #00ff41;
+  color: #fff;
   font-size: 1.1rem;
+  font-family: 'Netflix Sans', 'Helvetica Neue', sans-serif;
 }
 
 .marketModal__tab-pane p {
@@ -607,7 +609,7 @@
 .marketModal__chat-message {
   padding: 8px 10px;
   background: #0f1533;
-  border-left: 3px solid #00ff41;
+  border-left: 3px solid #00a8ff;
   border-radius: 4px;
   font-size: 0.9rem;
 }
@@ -620,7 +622,7 @@
 
 .marketModal__chat-username {
   font-weight: bold;
-  color: #00ff41;
+  color: #00a8ff;
   margin-right: 8px;
 }
 
@@ -663,10 +665,10 @@
 
 .marketModal__chat-send {
   padding: 8px 16px;
-  background: linear-gradient(135deg, #00ff41, #00a8ff);
+  background: #00a8ff;
   border: none;
   border-radius: 4px;
-  color: #000;
+  color: #fff;
   font-weight: bold;
   cursor: pointer;
   font-size: 0.9rem;
@@ -675,7 +677,7 @@
 
 .marketModal__chat-send:hover:not(:disabled) {
   transform: scale(1.05);
-  box-shadow: 0 2px 6px rgba(0, 255, 65, 0.3);
+  box-shadow: 0 2px 6px rgba(0, 168, 255, 0.3);
 }
 
 .marketModal__chat-send:disabled {
@@ -716,8 +718,9 @@
 
 .marketModal__username-content h3 {
   margin: 0 0 15px 0;
-  color: #00ff41;
+  color: #00a8ff;
   font-size: 1.3rem;
+  font-family: 'Netflix Sans', 'Helvetica Neue', sans-serif;
 }
 
 .marketModal__username-content input {
@@ -744,10 +747,10 @@
 .marketModal__username-btn-confirm {
   flex: 1;
   padding: 12px;
-  background: linear-gradient(135deg, #00ff41, #00a8ff);
+  background: #00a8ff;
   border: none;
   border-radius: 4px;
-  color: #000;
+  color: #fff;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.2s;
@@ -786,10 +789,10 @@
 
 .marketModal__change-username-btn {
   padding: 6px 12px;
-  background: #00ff41;
+  background: #00a8ff;
   border: none;
   border-radius: 4px;
-  color: #000;
+  color: #fff;
   font-weight: bold;
   cursor: pointer;
   font-size: 0.85rem;
@@ -798,7 +801,7 @@
 
 .marketModal__change-username-btn:hover {
   transform: scale(1.05);
-  box-shadow: 0 2px 6px rgba(0, 255, 65, 0.3);
+  box-shadow: 0 2px 6px rgba(0, 168, 255, 0.3);
 }
 
 .marketModal__ai-suggestions {
@@ -810,7 +813,7 @@
 
 .marketModal__ai-suggestions-title {
   margin: 0 0 10px 0;
-  color: #00ff41;
+  color: #00a8ff;
   font-weight: bold;
   font-size: 0.9rem;
 }

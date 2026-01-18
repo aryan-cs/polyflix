@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './MarketCard.css';
-import realImage from './images3.svg';
+import realImage from './ticket4.svg';
 
 // Extract keywords from market title
 function extractKeywords(title) {

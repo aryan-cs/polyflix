@@ -71,6 +71,25 @@
   margin: 0;
 }
 
+.marketModal__polymarket-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #3861fb;
+  border-radius: 50%;
+  margin-bottom: 16px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.marketModal__polymarket-link:hover {
+  background: #2a47d6;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(56, 97, 251, 0.3);
+}
+
 .marketModal__meta {
   display: flex;
   gap: 14px;
@@ -511,93 +530,6 @@
   padding: 2px 8px;
   border-radius: 10px;
   flex-shrink: 0;
-}
-
-/* More Like This Section */
-.marketModal__moreLikeThis {
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.marketModal__moreLikeThis-title {
-  margin: 0 0 16px 0;
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #fff;
-}
-
-.marketModal__moreLikeThis-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-
-@media (max-width: 600px) {
-  .marketModal__moreLikeThis-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.marketModal__moreLikeThis-card {
-  background: #222;
-  border-radius: 8px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.marketModal__moreLikeThis-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-}
-
-.marketModal__moreLikeThis-image {
-  height: 80px;
-  background-size: cover;
-  background-position: center;
-}
-
-.marketModal__moreLikeThis-info {
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.marketModal__moreLikeThis-name {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #fff;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.marketModal__moreLikeThis-volume {
-  font-size: 0.75rem;
-  color: #888;
-}
-
-.marketModal__moreLikeThis-loading {
-  padding: 20px;
-  text-align: center;
-  color: #888;
-  font-size: 0.9rem;
-}
-
-.marketModal__moreLikeThis-loading::after {
-  content: '';
-  animation: dots 1.5s steps(3, end) infinite;
-}
-
-.marketModal__moreLikeThis-empty {
-  padding: 20px;
-  text-align: center;
-  color: #666;
-  font-size: 0.9rem;
 }
 
 .marketModal__tabs {

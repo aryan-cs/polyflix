@@ -1,74 +1,108 @@
 import React, { useState, useEffect } from 'react';
+import '../App.css';
+import Navbar from '../components/Navbar';
 import Banner from '../components/Banner';
 import MarketRow from '../components/MarketRow';
+import MarketModal from '../components/MarketModal';
 import { marketData } from '../data/mockData';
 
-function HomeScreen() {
+function App() {
   const [sportsMarkets, setSportsMarkets] = useState([]);
   const [trendingMarkets, setTrendingMarkets] = useState([]);
   const [politicsMarkets, setPoliticsMarkets] = useState([]);
   const [cryptoMarkets, setCryptoMarkets] = useState([]);
   const [popCultureMarkets, setPopCultureMarkets] = useState([]);
   const [financeMarkets, setFinanceMarkets] = useState([]);
+  const [techMarkets, setTechMarkets] = useState([]);
+  const [climateMarkets, setClimateMarkets] = useState([]);
+  const [earningsMarkets, setEarningsMarkets] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:5001/api/polymarket/sports?limit=10')
-      .then(res => res.json())
-      .then((markets) => {
-        setSportsMarkets(markets);
-      })
-      .catch(err => console.error("❌ Error:", err));
+    const fetchAllCategories = async () => {
+      try {
+        console.log("🚀 Fetching all market categories from backend...");
 
-    fetch('http://localhost:5001/api/polymarket/trending?limit=10')
-      .then(res => res.json())
-      .then((markets) => {
-        setTrendingMarkets(markets);
-      })
-      .catch(err => console.error("❌ Error:", err));
+        const [sports, trending, politics, crypto, popculture, finance, tech, climate, earnings] = await Promise.all([
+          fetch('http://localhost:5002/api/polymarket/sports?limit=20').then(res => res.json()),
+          fetch('http://localhost:5002/api/polymarket/trending?limit=20').then(res => res.json()),
+          fetch('http://localhost:5002/api/polymarket/politics?limit=20').then(res => res.json()),
+          fetch('http://localhost:5002/api/polymarket/crypto?limit=50').then(res => res.json()),
+          fetch('http://localhost:5002/api/polymarket/popculture?limit=20').then(res => res.json()),
+          fetch('http://localhost:5002/api/polymarket/finance?limit=20').then(res => res.json()),
+          fetch('http://localhost:5002/api/polymarket/tech?limit=20').then(res => res.json()),
+          fetch('http://localhost:5002/api/polymarket/climate?limit=20').then(res => res.json()),
+          fetch('http://localhost:5002/api/polymarket/earnings?limit=20').then(res => res.json()),
+        ]);
 
-    fetch('http://localhost:5001/api/polymarket/politics?limit=10')
-      .then(res => res.json())
-      .then((markets) => {
-        setPoliticsMarkets(markets);
-      })
-      .catch(err => console.error("❌ Error:", err));
+        setSportsMarkets(sports.markets || []);
+        setTrendingMarkets(trending.markets || []);
+        setPoliticsMarkets(politics.markets || []);
+        setCryptoMarkets(crypto.markets || []);
+        setPopCultureMarkets(popculture.markets || []);
+        setFinanceMarkets(finance.markets || []);
+        setTechMarkets(tech.markets || []);
+        setClimateMarkets(climate.markets || []);
+        setEarningsMarkets(earnings.markets || []);
 
-    fetch('http://localhost:5001/api/polymarket/crypto?limit=10')
-      .then(res => res.json())
-      .then((markets) => {
-        setCryptoMarkets(markets);
-      })
-      .catch(err => console.error("❌ Error:", err));
+        console.log("✅ All categories loaded!");
+        setLoading(false);
+      } catch (error) {
+        console.error("❌ Error fetching markets:", error);
+        setLoading(false);
+      }
+    };
 
-    fetch('http://localhost:5001/api/polymarket/popculture?limit=10')
-      .then(res => res.json())
-      .then((markets) => {
-        setPopCultureMarkets(markets);
-      })
-      .catch(err => console.error("❌ Error:", err));
-
-    fetch('http://localhost:5001/api/polymarket/finance?limit=10')
-      .then(res => res.json())
-      .then((markets) => {
-        setFinanceMarkets(markets);
-      })
-      .catch(err => console.error("❌ Error:", err));
+    fetchAllCategories();
   }, []);
 
+  if (loading) {
+    return (
+      <div className="app">
+        <Navbar />
+        <p style={{ padding: '20px', textAlign: 'center' }}>Loading markets...</p>
+      </div>
+    );
+  }
+
   return (
-    <>
+    <div className="app">
+      <Navbar />
       <Banner market={marketData.featured} />
       
       <div className="app__rows">
-        <MarketRow title="Trending Markets" markets={trendingMarkets.length > 0 ? trendingMarkets : marketData.trending} />
-        <MarketRow title="Politics" markets={politicsMarkets.length > 0 ? politicsMarkets : marketData.politics} />
-        <MarketRow title="Crypto" markets={cryptoMarkets.length > 0 ? cryptoMarkets : marketData.crypto} />
-        <MarketRow title="Sports" markets={sportsMarkets.length > 0 ? sportsMarkets : marketData.sports} />
-        <MarketRow title="Pop Culture" markets={popCultureMarkets.length > 0 ? popCultureMarkets : marketData.popCulture} />
-        <MarketRow title="Finance" markets={financeMarkets.length > 0 ? financeMarkets : marketData.business} />
+        <MarketRow 
+          title="Trending Markets" 
+          markets={trendingMarkets.length > 0 ? trendingMarkets : marketData.trending} 
+        />
+        <MarketRow 
+          title="Politics" 
+          markets={politicsMarkets.length > 0 ? politicsMarkets : marketData.politics} 
+        />
+        <MarketRow 
+          title="Crypto" 
+          markets={cryptoMarkets.length > 0 ? cryptoMarkets : marketData.crypto} 
+        />
+        <MarketRow 
+          title="Sports" 
+          markets={sportsMarkets.length > 0 ? sportsMarkets : marketData.sports} 
+        />
+        <MarketRow 
+          title="Pop Culture" 
+          markets={popCultureMarkets.length > 0 ? popCultureMarkets : marketData.popCulture} 
+        />
+        <MarketRow 
+          title="Finance" 
+          markets={financeMarkets.length > 0 ? financeMarkets : marketData.business} 
+        />
+        <MarketRow 
+          title="Tech" 
+          markets={techMarkets.length > 0 ? techMarkets : []} 
+        />
+       
       </div>
-    </>
+    </div>
   );
 }
 
-export default HomeScreen;
+export default App;

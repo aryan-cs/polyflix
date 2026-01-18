@@ -1,0 +1,38 @@
+.trade-button {
+  display: flex;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 700;
+  border-radius: 4px;
+  overflow: hidden;
+  height: 45px;
+  width: 200px;
+  border: none;
+}
+
+.trade-button__option {
+  flex: 1;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1rem;
+  transition: background-color 0.2s ease;
+}
+
+.trade-button__option--yes {
+  background-color: #10b981; /* Green */
+}
+
+.trade-button__option--yes:hover {
+  background-color: #0d9366; /* Darker Green */
+}
+
+.trade-button__option--no {
+  background-color: #ef4444; /* Red */
+}
+
+.trade-button__option--no:hover {
+  background-color: #c93636; /* Darker Red */
+}

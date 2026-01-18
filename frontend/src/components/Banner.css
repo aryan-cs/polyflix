@@ -1,94 +1,68 @@
 .banner {
   color: white;
   object-fit: contain;
-  height: 110vh;
+  height: 105vh;
   position: relative;
 }
 
 .banner__contents {
-  margin-left: 50px;
-  padding-top: 200px;
-  padding-bottom: 20vh;
-  height: 100%;
+  position: absolute;
+  bottom: 16rem;
+  margin-left: 60px;
+  height: auto;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  max-width: 50%;
+  max-width: 40%;
 }
 
 .banner__title {
-  font-size: 3.5rem;
-  font-weight: 800;
-  margin-bottom: 0.3rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-  line-height: 1.2;
-}
-
-.banner__stats {
-  display: flex;
-  gap: 30px;
-  margin: 20px 0;
-  flex-wrap: wrap;
-}
-
-.banner__stat {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.banner__stat-label {
-  font-size: 0.8rem;
-  color: #b3b3b3;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-weight: 600;
-}
-
-.banner__stat-value {
-  font-size: 1.3rem;
-  font-weight: 700;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  font-family: 'Instrument Serif', serif;
+  font-size: 5rem;
+  font-weight: 400;
+  padding-bottom: 0.3rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.45);
+  text-wrap: balance;
 }
 
 .banner__description {
-  width: 45rem;
-  line-height: 1.6;
+  width: 75%;
+  line-height: 1.3;
   padding-top: 1rem;
-  font-size: 1rem;
-  max-width: 450px;
-  height: 80px;
-  color: #e5e5e5;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-  font-weight: 400;
+  font-size: 1.1rem;
+  font-weight: 500;
+  height: auto;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.45);
+  margin-bottom: 2rem;
 }
 
 .banner__buttons {
   display: flex;
   gap: 1rem;
-  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  align-items: center;
+}
+
+.banner--fadeBottom {
+  height: 16rem;
+  background-image: linear-gradient(
+    180deg,
+    transparent,
+    rgba(37, 37, 37, 0.61),
+    #141414
+  );
+  position: absolute;
+  bottom: 0;
+  width: 100%;
 }
 
 @media (max-width: 768px) {
   .banner__contents {
-    margin-left: 30px;
-    max-width: 70%;
+    margin-left: 20px;
+    padding-top: 100px;
+    max-width: 80%;
   }
 
   .banner__title {
-    font-size: 2rem;
-  }
-
-  .banner__description {
-    font-size: 0.9rem;
-    max-width: 300px;
-  }
-
-  .banner__stats {
-    gap: 15px;
-  }
-
-  .banner__stat-value {
-    font-size: 1rem;
+    font-size: 3rem;
   }
 }

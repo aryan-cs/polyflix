@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import './MarketRow.css';
 import MarketCard from './MarketCard';
 
-function MarketRow({ title, markets }) {
+function MarketRow({ title, markets, onSelectMarket }) {
   const rowRef = useRef(null);
   const [scrollX, setScrollX] = useState(0);
 
@@ -33,7 +33,7 @@ function MarketRow({ title, markets }) {
         
         <div className="row__posters" ref={rowRef}>
           {markets?.map((market) => (
-            <MarketCard key={market.id} market={market} />
+            <MarketCard key={market.id} market={market} onSelectMarket={onSelectMarket} />
           ))}
         </div>
 

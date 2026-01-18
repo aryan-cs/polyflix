@@ -1,0 +1,291 @@
+.marketModal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 40px 20px;
+}
+
+.marketModal--closing {
+  animation: modalBackdropFadeOut 0.25s ease forwards;
+  pointer-events: none;
+}
+
+.marketModal__dialog {
+  background: #181818;
+  color: #fff;
+  width: min(760px, 92vw);
+  border-radius: 12px;
+  overflow: auto;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  animation: modalFadeIn 0.4s ease;
+  max-height: 90vh;
+}
+
+.marketModal--closing .marketModal__dialog {
+  animation: modalFadeOut 0.25s ease forwards;
+}
+
+.marketModal__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  color: #fff;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.marketModal__hero {
+  height: 320px;
+  background-size: cover;
+  background-position: center;
+}
+
+.marketModal__body {
+  padding: 24px 30px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.marketModal__title {
+  font-size: 1.8rem;
+  margin: 0;
+}
+
+.marketModal__meta {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  font-size: 0.9rem;
+  color: #b3b3b3;
+}
+
+.marketModal__badge {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.marketModal__description {
+  margin: 0;
+  line-height: 1.6;
+  color: #e5e5e5;
+}
+
+.marketModal__readMore {
+  margin-left: 8px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.marketModal__readMore:hover {
+  text-decoration: underline;
+}
+
+.marketModal__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+.marketModal__stats--compact {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.marketModal__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+
+.marketModal__stat-label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  color: #9ca3af;
+}
+
+.marketModal__stat-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.marketModal__stat-value--yes {
+  color: #10b981;
+}
+
+.marketModal__stat-value--no {
+  color: #ef4444;
+}
+
+.marketModal__outcomes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.marketModal__outcomes-title {
+  margin: 0;
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #9ca3af;
+}
+
+.marketModal__outcomes-list {
+  display: grid;
+  gap: 10px;
+}
+
+.marketModal__outcome {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.marketModal__outcome-name {
+  font-weight: 600;
+}
+
+.marketModal__outcome-price {
+  font-weight: 700;
+  color: #10b981;
+}
+
+.marketModal__cta {
+  align-self: flex-start;
+  background: #fff;
+  color: #000;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 6px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.marketModal__cta:hover {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.marketModal__related {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.marketModal__related-title {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.marketModal__related-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.marketModal__related-card {
+  background: #222;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+}
+
+.marketModal__related-image {
+  height: 120px;
+  background-size: cover;
+  background-position: center;
+}
+
+.marketModal__related-info {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.marketModal__related-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.marketModal__related-category {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes modalFadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+}
+
+@keyframes modalBackdropFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .marketModal {
+    padding: 20px 12px;
+  }
+
+  .marketModal__hero {
+    height: 220px;
+  }
+
+  .marketModal__body {
+    padding: 20px;
+  }
+
+  .marketModal__title {
+    font-size: 1.4rem;
+  }
+}
+

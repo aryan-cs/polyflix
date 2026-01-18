@@ -65,11 +65,11 @@ function MarketCard({ market, onSelectMarket }) {
                 </button>
               </div>
 
-              <div className="marketCard__metaRow">
-                <span className="marketCard__rating">R</span>
-                <span className="marketCard__duration">3h</span>
-                <span className="marketCard__hd">HD</span>
-              </div>
+            <div className="marketCard__metaRow">
+              <span className="marketCard__rating">R</span>
+              <span className="marketCard__duration">3h</span>
+              <span className="marketCard__hd">HD</span>
+            </div>
 
               <div className="marketCard__tags">
                 <span>Slick</span>

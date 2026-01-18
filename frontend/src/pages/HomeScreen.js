@@ -5,6 +5,7 @@ import Banner from '../components/Banner';
 import MarketRow from '../components/MarketRow';
 import MarketModal from '../components/MarketModal';
 import { marketData } from '../data/mockData';
+import { getMarketImage } from '../utils/imageMapper';
 
 function App() {
   const [sportsMarkets, setSportsMarkets] = useState([]);
@@ -18,6 +19,7 @@ function App() {
   const [earningsMarkets, setEarningsMarkets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedMarket, setSelectedMarket] = useState(null);
+  const [featuredMarket, setFeaturedMarket] = useState(null);
 
   useEffect(() => {
     const fetchAllCategories = async () => {
@@ -36,20 +38,55 @@ function App() {
           fetch('http://localhost:5002/api/polymarket/earnings?limit=20').then(res => res.json()),
         ]);
 
-        setSportsMarkets(sports.markets || []);
-        setTrendingMarkets(trending.markets || []);
-        setPoliticsMarkets(politics.markets || []);
-        setCryptoMarkets(crypto.markets || []);
-        setPopCultureMarkets(popculture.markets || []);
-        setFinanceMarkets(finance.markets || []);
-        setTechMarkets(tech.markets || []);
-        setClimateMarkets(climate.markets || []);
-        setEarningsMarkets(earnings.markets || []);
+        const enrich = (markets) => (markets || []).map(m => {
+          // Map backend fields to frontend expectations
+          const title = m.title || m.question || "Untitled Market";
+          const image = m.image || m.icon; // Polymarket often returns 'icon'
+          
+          return { 
+            ...m, 
+            title,
+            image: getMarketImage({ ...m, title, image }) 
+          };
+        });
+
+        const sportsEnriched = enrich(sports.markets);
+        const trendingEnriched = enrich(trending.markets);
+        const politicsEnriched = enrich(politics.markets);
+        const cryptoEnriched = enrich(crypto.markets);
+        const popCultureEnriched = enrich(popculture.markets);
+        const financeEnriched = enrich(finance.markets);
+
+        setSportsMarkets(sportsEnriched);
+        setTrendingMarkets(trendingEnriched);
+        setPoliticsMarkets(politicsEnriched);
+        setCryptoMarkets(cryptoEnriched);
+        setPopCultureMarkets(popCultureEnriched);
+        setFinanceMarkets(financeEnriched);
+        setTechMarkets(enrich(tech.markets));
+        setClimateMarkets(enrich(climate.markets));
+        setEarningsMarkets(enrich(earnings.markets));
+
+        // Pick a random featured market from the top categories
+        const featuredPool = [
+           ...trendingEnriched, 
+           ...politicsEnriched, 
+           ...cryptoEnriched, 
+           ...sportsEnriched
+        ].filter(m => m.image); // Prefer ones that might have images
+
+        if (featuredPool.length > 0) {
+          const randomMarket = featuredPool[Math.floor(Math.random() * featuredPool.length)];
+          setFeaturedMarket(randomMarket);
+        } else {
+          setFeaturedMarket(marketData.featured);
+        }
 
         console.log("✅ All categories loaded!");
         setLoading(false);
       } catch (error) {
         console.error("❌ Error fetching markets:", error);
+        setFeaturedMarket(marketData.featured);
         setLoading(false);
       }
     };
@@ -57,11 +94,19 @@ function App() {
     fetchAllCategories();
   }, []);
 
-  if (loading) {
+  if (loading || !featuredMarket) {
     return (
       <div className="app">
         <Navbar />
-        <p style={{ padding: '20px', textAlign: 'center' }}>Loading markets...</p>
+        <div style={{ 
+          height: '100vh', 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          color: 'white' 
+        }}>
+          <h2>Loading Polyflix...</h2>
+        </div>
       </div>
     );
   }
@@ -70,8 +115,8 @@ function App() {
     <div className="app">
       <Navbar />
       <Banner
-        market={marketData.featured}
-        onMoreInfo={() => setSelectedMarket(marketData.featured)}
+        market={featuredMarket}
+        onMoreInfo={() => setSelectedMarket(featuredMarket)}
       />
       
       <div className="app__rows">

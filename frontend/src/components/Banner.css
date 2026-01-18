@@ -3,6 +3,36 @@
   object-fit: contain;
   height: 105vh;
   position: relative;
+  overflow: hidden; /* Ensure video doesn't spill out */
+  background-color: #141414; /* Fallback color */
+}
+
+.banner__videoWrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none; /* Let user click on buttons on top */
+}
+
+.banner__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.35); /* Zoom in slightly to hide YouTube bars/black edges */
+}
+
+/* Add a dark shim so white text is readable against bright videos */
+.banner__videoOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.3);
+  z-index: 1;
 }
 
 .banner__contents {
@@ -13,6 +43,7 @@
   display: flex;
   flex-direction: column;
   max-width: 40%;
+  z-index: 10; /* Above video */
 }
 
 .banner__title {
@@ -20,7 +51,7 @@
   font-size: 5rem;
   font-weight: 400;
   padding-bottom: 0.3rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.45);
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 1);
   text-wrap: balance;
 }
 
@@ -53,6 +84,7 @@
   position: absolute;
   bottom: 0;
   width: 100%;
+  z-index: 5; /* Above video but below content (optional, or just blend) */
 }
 
 @media (max-width: 768px) {

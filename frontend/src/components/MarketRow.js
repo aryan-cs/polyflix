@@ -23,13 +23,13 @@ function MarketRow({ title, markets, onSelectMarket }) {
     <div className="row">
       <h2 className="row__title">{title}</h2>
       <div className="row__container">
-        <button 
+        {/* <button 
           className="row__button row__button--left"
           onClick={() => handleScroll('left')}
           style={{display: scrollX <= 0 ? 'none' : 'block'}}
         >
           ‹
-        </button>
+        </button> */}
         
         <div className="row__posters" ref={rowRef}>
           {markets?.map((market) => (
@@ -37,12 +37,12 @@ function MarketRow({ title, markets, onSelectMarket }) {
           ))}
         </div>
 
-        <button 
+        {/* <button 
           className="row__button row__button--right"
           onClick={() => handleScroll('right')}
         >
           ›
-        </button>
+        </button> */}
       </div>
     </div>
   );

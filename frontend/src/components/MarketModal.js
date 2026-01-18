@@ -5,6 +5,7 @@ import { getWatchlists, addMarketToWatchlist, removeMarketFromWatchlist } from '
 function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatchlist }) {
   const [isClosing, setIsClosing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+
   const [selectedOutcome, setSelectedOutcome] = useState('Yes');
   const [limitPrice, setLimitPrice] = useState('');
   const [shares, setShares] = useState('');
@@ -36,7 +37,7 @@ function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatc
   const dropdownRef = useRef(null);
   const tabsHeaderRef = useRef(null);
 
-  // Load watchlists - use props if provided, otherwise load from localStorage
+  // Load watchlists
   useEffect(() => {
     if (propWatchlists && propWatchlists.length > 0) {
       setWatchlists(propWatchlists);
@@ -45,22 +46,18 @@ function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatc
     }
   }, [propWatchlists]);
 
-  // Initialize checked watchlists when market or watchlists change
+  // Initialize checked watchlists
   useEffect(() => {
     if (!market || watchlists.length === 0) return;
-
-    // Find which watchlists already contain this market
     const containingWatchlists = watchlists
       .filter(w => w.markets.some(m => m.id === market.id))
       .map(w => w.id);
-
     setCheckedWatchlists(new Set(containingWatchlists));
   }, [market, watchlists]);
 
   // Log market on open
   useEffect(() => {
     if (!market) return;
-
     setIsClosing(false);
     setIsExpanded(false);
     setShowWatchlistDropdown(false);
@@ -143,11 +140,7 @@ Only return the JSON array, nothing else.`
   // Parse prices from Gamma API data
   useEffect(() => {
     if (!market) return;
-
-    // outcomePrices comes as a JSON string from Gamma API like "[\"0.029\", \"0.971\"]"
     let prices = market.outcomePrices;
-
-    // Parse if it's a string
     if (typeof prices === 'string') {
       try {
         prices = JSON.parse(prices);
@@ -155,12 +148,10 @@ Only return the JSON array, nothing else.`
         prices = null;
       }
     }
-
     if (Array.isArray(prices) && prices.length >= 2) {
       setYesPrice(Math.round(parseFloat(prices[0]) * 100));
       setNoPrice(Math.round(parseFloat(prices[1]) * 100));
     } else {
-      // Fallback to 50/50 if no price data
       setYesPrice(50);
       setNoPrice(50);
     }
@@ -173,7 +164,6 @@ Only return the JSON array, nothing else.`
         setShowWatchlistDropdown(false);
       }
     };
-
     if (showWatchlistDropdown) {
       document.addEventListener('mousedown', handleClickOutside);
     }
@@ -193,7 +183,7 @@ Only return the JSON array, nothing else.`
   }, []);
 
   const handleTrade = () => {
-    // Trading not implemented - would require wallet connection
+    // Trading not implemented
   };
 
   const handleToggleWatchlist = (watchlistId) => {
@@ -202,11 +192,9 @@ Only return the JSON array, nothing else.`
 
     if (isCurrentlyChecked) {
       newChecked.delete(watchlistId);
-      // If we have a callback from parent (MyWatchlists page), use it
       if (onToggleWatchlist) {
         onToggleWatchlist(watchlistId, market, false);
       } else {
-        // Otherwise update localStorage directly
         const updated = removeMarketFromWatchlist(watchlistId, market.id);
         setWatchlists(updated);
       }
@@ -219,7 +207,6 @@ Only return the JSON array, nothing else.`
         setWatchlists(updated);
       }
     }
-
     setCheckedWatchlists(newChecked);
   };
 
@@ -354,7 +341,6 @@ Only return the JSON array, nothing else.`
         handleClose();
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
@@ -469,9 +455,7 @@ Only return the JSON array, nothing else.`
     ? market.outcomePairs
     : [];
   const showOutcomeList = outcomePairs.length > 0 && !market.hasBinaryOutcomes;
-
   const volume = market.volumeNum ? `$${(market.volumeNum / 1000000).toFixed(1)}M` : '—';
-
   const watchlistCount = checkedWatchlists.size;
 
   return (
@@ -528,52 +512,46 @@ Only return the JSON array, nothing else.`
         <div className="marketModal__body" ref={bodyRef}>
           <h2 className="marketModal__title">{market.title || market.question}</h2>
 
-          <div className="marketModal__meta">
-            <span className="marketModal__badge">{market.category || 'Market'}</span>
-            <span className="marketModal__end">
-              Ends {market.endDate || 'TBD'}
-            </span>
-            <div className="marketModal__watchlist-container" ref={dropdownRef}>
-              <button
-                className={`marketModal__watchlist-btn ${watchlistCount > 0 ? 'marketModal__watchlist-btn--active' : ''}`}
-                onClick={() => setShowWatchlistDropdown(!showWatchlistDropdown)}
-              >
-                {watchlistCount > 0 ? `★ In ${watchlistCount} List${watchlistCount > 1 ? 's' : ''}` : '+ Watchlist'}
-              </button>
+          <div className="marketModal__watchlist-container">
+            <button
+              className={`marketModal__watchlist-btn ${watchlistCount > 0 ? 'marketModal__watchlist-btn--active' : ''}`}
+              onClick={() => setShowWatchlistDropdown(!showWatchlistDropdown)}
+            >
+              {watchlistCount > 0 ? `★ In ${watchlistCount} List${watchlistCount > 1 ? 's' : ''}` : '+ Watchlist'}
+            </button>
 
-              {showWatchlistDropdown && (
-                <div className="marketModal__watchlist-dropdown">
-                  <div className="marketModal__watchlist-header">
-                    Add to Watchlist
-                  </div>
-                  {watchlists.length === 0 ? (
-                    <div className="marketModal__watchlist-empty">
-                      <p>No watchlists yet.</p>
-                      <p>Go to My Watchlists to create one!</p>
-                    </div>
-                  ) : (
-                    <div className="marketModal__watchlist-list">
-                      {watchlists.map((watchlist) => (
-                        <label key={watchlist.id} className="marketModal__watchlist-item">
-                          <input
-                            type="checkbox"
-                            checked={checkedWatchlists.has(watchlist.id)}
-                            onChange={() => handleToggleWatchlist(watchlist.id)}
-                          />
-                          <span className="marketModal__watchlist-checkbox">
-                            {checkedWatchlists.has(watchlist.id) && '✓'}
-                          </span>
-                          <span className="marketModal__watchlist-name">{watchlist.name}</span>
-                          <span className="marketModal__watchlist-count">
-                            {watchlist.markets.length}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  )}
+            {showWatchlistDropdown && (
+              <div ref={dropdownRef} className="marketModal__watchlist-dropdown">
+                <div className="marketModal__watchlist-header">
+                  Add to Watchlist
                 </div>
-              )}
-            </div>
+                {watchlists.length === 0 ? (
+                  <div className="marketModal__watchlist-empty">
+                    <p>No watchlists yet.</p>
+                    <p>Go to My Watchlists to create one!</p>
+                  </div>
+                ) : (
+                  <div className="marketModal__watchlist-list">
+                    {watchlists.map((watchlist) => (
+                      <label key={watchlist.id} className="marketModal__watchlist-item">
+                        <input
+                          type="checkbox"
+                          checked={checkedWatchlists.has(watchlist.id)}
+                          onChange={() => handleToggleWatchlist(watchlist.id)}
+                        />
+                        <span className="marketModal__watchlist-checkbox">
+                          {checkedWatchlists.has(watchlist.id) && '✓'}
+                        </span>
+                        <span className="marketModal__watchlist-name">{watchlist.name}</span>
+                        <span className="marketModal__watchlist-count">
+                          {watchlist.markets.length}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <p className="marketModal__description">

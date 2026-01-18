@@ -1,6 +1,6 @@
 import React from 'react';
 import './Banner.css';
-import TradeNowButton from './TradeNowButton';
+import TradeButton from './TradeButton';
 import MoreInfoButton from './MoreInfoButton';
 
 function Banner({ market }) {
@@ -21,11 +21,15 @@ function Banner({ market }) {
         <h1 className="banner__title">{market?.title}</h1>
 
         <h2 className="banner__description">
-          {truncate(market?.description, 200)}
+          {market?.description.match(/^.*?[\.!?]/)[0].trim()}
         </h2>
         
         <div className="banner__buttons">
-          <TradeNowButton />
+          <TradeButton 
+            url={market?.url} 
+            optionA={market?.optionA || "Yes"} 
+            optionB={market?.optionB || "No"} 
+          />
           <MoreInfoButton />
         </div>
       </div>

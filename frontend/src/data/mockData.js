@@ -9,7 +9,10 @@ export const marketData = {
     volume: "2.4M",
     liquidity: "500K",
     category: "Crypto",
-    endDate: "Dec 31, 2026"
+    endDate: "Dec 31, 2026",
+    url: "https://polymarket.com/event/bitcoin-price-2026",
+    optionA: "Yes",
+    optionB: "No"
   },
   
   trending: [

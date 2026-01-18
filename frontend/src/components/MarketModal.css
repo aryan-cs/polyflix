@@ -289,3 +289,90 @@
   }
 }
 
+/* Add these styles to your existing MarketModal.css */
+
+.marketModal__trading-panel {
+  margin-top: 30px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 20px;
+}
+
+.marketModal__trading-header {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.marketModal__tab {
+  flex: 1;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.marketModal__tab.active {
+  background: #00a8ff;
+  border-color: #00a8ff;
+}
+
+.marketModal__trading-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.marketModal__form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.marketModal__form-group label {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.marketModal__form-group input {
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.marketModal__form-group input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.marketModal__outcome-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.marketModal__outcome-btn {
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.marketModal__outcome-btn.active {
+  background: #00ff41;
+  color: #000;
+  border-color: #00ff41;
+}
+
+.marketModal__cta:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

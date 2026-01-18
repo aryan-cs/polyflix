@@ -34,138 +34,73 @@ function MyWatchlists() {
     }
   };
 
-  const handleDeleteWatchlist = (id) => {
-    setWatchlists(watchlists.filter(w => w.id !== id));
+  const handleDeleteWatchlist = (watchlistId) => {
+    setWatchlists(watchlists.filter(w => w.id !== watchlistId));
   };
 
-  const handleStartEdit = (watchlist) => {
-    setEditingWatchlist(watchlist.id);
-    setEditName(watchlist.name);
-  };
-
-  const handleSaveEdit = (id) => {
-    if (editName.trim()) {
+  const handleEditWatchlist = (watchlistId, newName) => {
+    if (newName.trim()) {
       setWatchlists(watchlists.map(w =>
-        w.id === id ? { ...w, name: editName.trim() } : w
+        w.id === watchlistId ? { ...w, name: newName.trim() } : w
       ));
+      setEditingWatchlist(null);
+      setEditName('');
     }
-    setEditingWatchlist(null);
-    setEditName('');
   };
 
-  const handleCancelEdit = () => {
-    setEditingWatchlist(null);
-    setEditName('');
+  const handleRemoveMarketFromWatchlist = (watchlistId, marketId) => {
+    setWatchlists(watchlists.map(w =>
+      w.id === watchlistId
+        ? { ...w, markets: w.markets.filter(m => m.id !== marketId) }
+        : w
+    ));
   };
 
-  const handleKeyDown = (e, action) => {
-    if (e.key === 'Enter') {
-      action();
-    } else if (e.key === 'Escape') {
-      if (showCreateModal) {
-        setShowCreateModal(false);
-        setNewWatchlistName('');
-      } else if (editingWatchlist) {
-        handleCancelEdit();
-      }
-    }
+  const handleAddToWatchlist = (watchlistId, market) => {
+    setWatchlists(watchlists.map(w =>
+      w.id === watchlistId
+        ? { 
+            ...w, 
+            markets: w.markets.some(m => m.id === market.id) 
+              ? w.markets 
+              : [...w.markets, market]
+          }
+        : w
+    ));
   };
 
   return (
     <div className="myWatchlists">
       <div className="myWatchlists__header">
-        <h2>My Watchlists</h2>
-        <button
-          className="myWatchlists__createBtn"
+        <h1>My Watchlists</h1>
+        <button 
+          className="myWatchlists__create-btn"
           onClick={() => setShowCreateModal(true)}
         >
-          + Create New Watchlist
+          + Create Watchlist
         </button>
       </div>
 
-      {watchlists.length === 0 ? (
-        <div className="myWatchlists__empty">
-          <p>You don't have any watchlists yet.</p>
-          <p>Click "Create New Watchlist" to get started!</p>
-        </div>
-      ) : (
-        <div className="myWatchlists__rows">
-          {watchlists.map((watchlist) => (
-            <div key={watchlist.id} className="myWatchlists__rowContainer">
-              <div className="myWatchlists__rowHeader">
-                {editingWatchlist === watchlist.id ? (
-                  <div className="myWatchlists__editContainer">
-                    <input
-                      type="text"
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      onKeyDown={(e) => handleKeyDown(e, () => handleSaveEdit(watchlist.id))}
-                      className="myWatchlists__editInput"
-                      autoFocus
-                    />
-                    <button
-                      className="myWatchlists__iconBtn myWatchlists__saveBtn"
-                      onClick={() => handleSaveEdit(watchlist.id)}
-                      title="Save"
-                    >
-                      ✓
-                    </button>
-                    <button
-                      className="myWatchlists__iconBtn myWatchlists__cancelBtn"
-                      onClick={handleCancelEdit}
-                      title="Cancel"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ) : (
-                  <div className="myWatchlists__titleContainer">
-                    <h3 className="myWatchlists__rowTitle">{watchlist.name}</h3>
-                    <button
-                      className="myWatchlists__iconBtn myWatchlists__editBtn"
-                      onClick={() => handleStartEdit(watchlist)}
-                      title="Edit name"
-                    >
-                      ✎
-                    </button>
-                    <button
-                      className="myWatchlists__iconBtn myWatchlists__deleteBtn"
-                      onClick={() => handleDeleteWatchlist(watchlist.id)}
-                      title="Delete watchlist"
-                    >
-                      🗑
-                    </button>
-                  </div>
-                )}
-              </div>
-              {watchlist.markets.length > 0 ? (
-                <MarketRow title="" markets={watchlist.markets} onSelectMarket={setSelectedMarket} />
-              ) : (
-                <div className="myWatchlists__emptyRow">
-                  <p>No markets in this watchlist yet. Add markets from the home page!</p>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
       {showCreateModal && (
-        <div className="myWatchlists__modalOverlay" onClick={() => setShowCreateModal(false)}>
-          <div className="myWatchlists__modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Create New Watchlist</h3>
+        <div className="myWatchlists__modal">
+          <div className="myWatchlists__modal-content">
+            <h2>Create New Watchlist</h2>
             <input
               type="text"
-              placeholder="Enter watchlist name..."
+              placeholder="Enter watchlist name"
               value={newWatchlistName}
               onChange={(e) => setNewWatchlistName(e.target.value)}
-              onKeyDown={(e) => handleKeyDown(e, handleCreateWatchlist)}
-              className="myWatchlists__input"
-              autoFocus
+              onKeyPress={(e) => e.key === 'Enter' && handleCreateWatchlist()}
             />
-            <div className="myWatchlists__modalButtons">
-              <button
-                className="myWatchlists__modalBtn myWatchlists__modalBtn--cancel"
+            <div className="myWatchlists__modal-buttons">
+              <button 
+                className="myWatchlists__btn-primary"
+                onClick={handleCreateWatchlist}
+              >
+                Create
+              </button>
+              <button 
+                className="myWatchlists__btn-secondary"
                 onClick={() => {
                   setShowCreateModal(false);
                   setNewWatchlistName('');
@@ -173,19 +108,109 @@ function MyWatchlists() {
               >
                 Cancel
               </button>
-              <button
-                className="myWatchlists__modalBtn myWatchlists__modalBtn--create"
-                onClick={handleCreateWatchlist}
-                disabled={!newWatchlistName.trim()}
-              >
-                Create
-              </button>
             </div>
           </div>
         </div>
       )}
 
-      <MarketModal market={selectedMarket} onClose={() => setSelectedMarket(null)} />
+      <div className="myWatchlists__container">
+        {watchlists.length === 0 ? (
+          <div className="myWatchlists__empty">
+            <p>No watchlists yet. Create one to get started!</p>
+          </div>
+        ) : (
+          watchlists.map(watchlist => (
+            <div key={watchlist.id} className="myWatchlists__watchlist">
+              <div className="myWatchlists__watchlist-header">
+                {editingWatchlist === watchlist.id ? (
+                  <div className="myWatchlists__edit-group">
+                    <input
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleEditWatchlist(watchlist.id, editName)}
+                    />
+                    <button
+                      className="myWatchlists__btn-small"
+                      onClick={() => handleEditWatchlist(watchlist.id, editName)}
+                    >
+                      Save
+                    </button>
+                    <button
+                      className="myWatchlists__btn-small"
+                      onClick={() => setEditingWatchlist(null)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <h2>{watchlist.name}</h2>
+                    <div className="myWatchlists__watchlist-actions">
+                      <button
+                        className="myWatchlists__btn-icon"
+                        onClick={() => {
+                          setEditingWatchlist(watchlist.id);
+                          setEditName(watchlist.name);
+                        }}
+                        title="Edit watchlist"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        className="myWatchlists__btn-icon"
+                        onClick={() => handleDeleteWatchlist(watchlist.id)}
+                        title="Delete watchlist"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="myWatchlists__markets">
+                {watchlist.markets.length === 0 ? (
+                  <p className="myWatchlists__empty-message">
+                    No markets in this watchlist yet
+                  </p>
+                ) : (
+                  <div className="myWatchlists__market-list">
+                    {watchlist.markets.map(market => (
+                      <div 
+                        key={market.id} 
+                        className="myWatchlists__market-item"
+                        onClick={() => setSelectedMarket(market)}
+                      >
+                        <MarketRow market={market} />
+                        <button
+                          className="myWatchlists__remove-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveMarketFromWatchlist(watchlist.id, market.id);
+                          }}
+                          title="Remove from watchlist"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {selectedMarket && (
+        <MarketModal 
+          market={selectedMarket} 
+          onClose={() => setSelectedMarket(null)}
+          watchlists={watchlists}
+          onAddToWatchlist={handleAddToWatchlist}
+        />
+      )}
     </div>
   );
 }

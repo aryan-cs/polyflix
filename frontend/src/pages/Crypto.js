@@ -90,7 +90,8 @@ const groupMarkets = (markets) => {
 
 function Crypto() {
   const [selectedMarket, setSelectedMarket] = useState(null);
-  const [cryptoMarkets, setCryptoMarkets] = useState(marketData.crypto);
+  const [cryptoMarkets, setCryptoMarkets] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { grouped, other } = useMemo(
     () => groupMarkets(cryptoMarkets),
     [cryptoMarkets]
@@ -105,14 +106,30 @@ function Crypto() {
         const data = await response.json();
         if (Array.isArray(data.markets) && data.markets.length > 0) {
           setCryptoMarkets(data.markets);
+        } else {
+          setCryptoMarkets(marketData.crypto);
         }
       } catch (error) {
         console.error('❌ Error fetching crypto markets:', error);
+        setCryptoMarkets(marketData.crypto);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchCrypto();
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="crypto">
+        <div className="crypto__header">
+          <h2>Crypto</h2>
+        </div>
+        <div className="crypto__loading">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="crypto">

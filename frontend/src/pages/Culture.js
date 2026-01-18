@@ -108,9 +108,8 @@ const groupMarkets = (markets) => {
 
 function Culture() {
   const [selectedMarket, setSelectedMarket] = useState(null);
-  const [cultureMarkets, setCultureMarkets] = useState(
-    marketData.popCulture || []
-  );
+  const [cultureMarkets, setCultureMarkets] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { grouped, other } = useMemo(
     () => groupMarkets(cultureMarkets),
     [cultureMarkets]
@@ -125,14 +124,30 @@ function Culture() {
         const data = await response.json();
         if (Array.isArray(data.markets) && data.markets.length > 0) {
           setCultureMarkets(data.markets);
+        } else {
+          setCultureMarkets(marketData.popCulture || []);
         }
       } catch (error) {
         console.error('❌ Error fetching culture markets:', error);
+        setCultureMarkets(marketData.popCulture || []);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchCulture();
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="culture">
+        <div className="culture__header">
+          <h2>Culture</h2>
+        </div>
+        <div className="culture__loading">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="culture">

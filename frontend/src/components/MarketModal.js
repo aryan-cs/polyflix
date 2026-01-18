@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './MarketModal.css';
 import { getWatchlists, addMarketToWatchlist, removeMarketFromWatchlist } from '../pages/MyWatchlists';
 
-function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatchlist }) {
+function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatchlist, onSelectMarket }) {
   const [isClosing, setIsClosing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -21,6 +21,8 @@ function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatc
   const [aiInput, setAiInput] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
   const [suggestedQuestions, setSuggestedQuestions] = useState([]);
+  const [similarMarkets, setSimilarMarkets] = useState([]);
+  const [similarLoading, setSimilarLoading] = useState(false);
   const [username, setUsername] = useState(() => {
     // Use sessionStorage instead of localStorage so each tab has its own username
     const sessionUsername = sessionStorage.getItem(`polyflix_username_${market?.id}`);
@@ -81,6 +83,44 @@ function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatc
     if (bodyRef.current) {
       bodyRef.current.scrollTop = 0;
     }
+  }, [market]);
+
+  // Fetch similar markets when modal opens
+  useEffect(() => {
+    if (!market) return;
+
+    const fetchSimilarMarkets = async () => {
+      setSimilarLoading(true);
+      setSimilarMarkets([]);
+
+      try {
+        const response = await fetch('http://localhost:8000/api/similar', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            market: {
+              id: market.id,
+              title: market.title || market.question,
+              volume: market.volumeNum || 0,
+            },
+            limit: 3,
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setSimilarMarkets(data.similar || []);
+        }
+      } catch (error) {
+        console.error('Error fetching similar markets:', error);
+      } finally {
+        setSimilarLoading(false);
+      }
+    };
+
+    fetchSimilarMarkets();
   }, [market]);
 
   // Generate AI-powered suggested questions when market loads
@@ -663,6 +703,64 @@ Only return the JSON array, nothing else.`
           >
             Trade Now
           </button>
+
+          <div className="marketModal__moreLikeThis">
+            <h4 className="marketModal__moreLikeThis-title">More Like This</h4>
+            {similarLoading ? (
+              <div className="marketModal__moreLikeThis-loading">
+                Finding similar markets...
+              </div>
+            ) : similarMarkets.length > 0 ? (
+              <div className="marketModal__moreLikeThis-grid">
+                {similarMarkets.map((similarMarket) => (
+                  <div
+                    key={similarMarket.id}
+                    className="marketModal__moreLikeThis-card"
+                    onClick={() => {
+                      if (onSelectMarket) {
+                        // Transform similar market data to match expected modal format
+                        const formattedMarket = {
+                          id: similarMarket.id,
+                          title: similarMarket.title,
+                          question: similarMarket.title,
+                          image: similarMarket.image || '',
+                          volumeNum: similarMarket.volume || 0,
+                          slug: similarMarket.slug || '',
+                          endDate: similarMarket.end_date || '',
+                          category: market.category || '',
+                          // These will show default values in modal
+                          outcomePrices: null,
+                          hasBinaryOutcomes: true,
+                        };
+                        onSelectMarket(formattedMarket);
+                      }
+                    }}
+                  >
+                    <div
+                      className="marketModal__moreLikeThis-image"
+                      style={{
+                        backgroundImage: similarMarket.image
+                          ? `url(${similarMarket.image})`
+                          : 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+                      }}
+                    />
+                    <div className="marketModal__moreLikeThis-info">
+                      <span className="marketModal__moreLikeThis-name">
+                        {similarMarket.title}
+                      </span>
+                      <span className="marketModal__moreLikeThis-volume">
+                        ${(similarMarket.volume / 1000000).toFixed(1)}M volume
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="marketModal__moreLikeThis-empty">
+                No similar markets found
+              </div>
+            )}
+          </div>
 
           <div className="marketModal__tabs">
             <div className="marketModal__tabs-header" ref={tabsHeaderRef}>

@@ -162,7 +162,11 @@ function App() {
         />
        
       </div>
-      <MarketModal market={selectedMarket} onClose={() => setSelectedMarket(null)} />
+      <MarketModal
+        market={selectedMarket}
+        onClose={() => setSelectedMarket(null)}
+        onSelectMarket={setSelectedMarket}
+      />
     </div>
   );
 }

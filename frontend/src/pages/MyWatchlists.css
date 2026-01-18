@@ -7,7 +7,11 @@
 }
 
 .myWatchlists__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 30px;
+    padding-right: 20px;
 }
 
 .myWatchlists__header h2 {
@@ -15,4 +19,213 @@
     font-size: 2.5rem;
     font-weight: bold;
     margin-left: 10px;
+}
+
+.myWatchlists__createBtn {
+    background-color: #e50914;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.myWatchlists__createBtn:hover {
+    background-color: #f40612;
+}
+
+.myWatchlists__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    color: #808080;
+    font-size: 1.2rem;
+}
+
+.myWatchlists__empty p {
+    margin: 5px 0;
+}
+
+.myWatchlists__rowContainer {
+    margin-bottom: 30px;
+}
+
+.myWatchlists__rowHeader {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    margin-left: 10px;
+}
+
+.myWatchlists__titleContainer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.myWatchlists__rowTitle {
+    color: white;
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.myWatchlists__iconBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 5px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+    opacity: 0.6;
+}
+
+.myWatchlists__iconBtn:hover {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.myWatchlists__editBtn {
+    color: #aaa;
+}
+
+.myWatchlists__deleteBtn {
+    color: #aaa;
+}
+
+.myWatchlists__deleteBtn:hover {
+    background-color: rgba(229, 9, 20, 0.3);
+}
+
+.myWatchlists__editContainer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.myWatchlists__editInput {
+    background-color: #333;
+    border: 1px solid #555;
+    color: white;
+    padding: 8px 12px;
+    font-size: 1.2rem;
+    border-radius: 4px;
+    width: 300px;
+}
+
+.myWatchlists__editInput:focus {
+    outline: none;
+    border-color: #e50914;
+}
+
+.myWatchlists__saveBtn {
+    color: #4caf50;
+}
+
+.myWatchlists__cancelBtn {
+    color: #f44336;
+}
+
+.myWatchlists__emptyRow {
+    color: #666;
+    font-size: 1rem;
+    padding: 40px 20px;
+    text-align: center;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    margin: 0 10px;
+}
+
+/* Modal styles */
+.myWatchlists__modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.myWatchlists__modal {
+    background-color: #1a1a1a;
+    padding: 30px;
+    border-radius: 8px;
+    width: 400px;
+    max-width: 90%;
+}
+
+.myWatchlists__modal h3 {
+    color: white;
+    font-size: 1.5rem;
+    margin: 0 0 20px 0;
+}
+
+.myWatchlists__input {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    background-color: #333;
+    border: 1px solid #555;
+    border-radius: 4px;
+    color: white;
+    box-sizing: border-box;
+}
+
+.myWatchlists__input:focus {
+    outline: none;
+    border-color: #e50914;
+}
+
+.myWatchlists__input::placeholder {
+    color: #888;
+}
+
+.myWatchlists__modalButtons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.myWatchlists__modalBtn {
+    padding: 10px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.myWatchlists__modalBtn--cancel {
+    background-color: #333;
+    color: white;
+}
+
+.myWatchlists__modalBtn--cancel:hover {
+    background-color: #444;
+}
+
+.myWatchlists__modalBtn--create {
+    background-color: #e50914;
+    color: white;
+}
+
+.myWatchlists__modalBtn--create:hover {
+    background-color: #f40612;
+}
+
+.myWatchlists__modalBtn--create:disabled {
+    background-color: #555;
+    cursor: not-allowed;
 }

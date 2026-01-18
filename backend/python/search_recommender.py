@@ -258,94 +258,94 @@ class SearchRecommender:
         # Combine: 50% creation recency, 50% end date proximity
         return (creation_score * 0.5) + (end_date_score * 0.5)
 
-    def _extract_keywords(self, titles: List[str], top_n: int = 3) -> List[str]:
+    def _extract_keywords_from_title(self, title: str, top_n: int = 2) -> List[str]:
         """
-        Extract compound keywords (bigrams) from titles for more precise searching.
-
-        Uses a two-pass approach:
-        1. Find the most common single meaningful word (the "anchor")
-        2. Find bigrams containing that anchor word
-        3. Return compound phrases like "NBA championship" instead of just "championship"
+        Extract keywords from a single title.
 
         Args:
-            titles: List of market titles to analyze.
-            top_n: Number of top keywords to return.
+            title: A single market title to analyze.
+            top_n: Number of keywords to extract from this title.
 
         Returns:
-            List of top N compound keywords (bigrams preferred, fallback to unigrams).
+            List of keywords (bigrams preferred, fallback to unigrams).
         """
-        # First pass: count single words to find anchors
-        word_counter = Counter()
-        # Second pass: count bigrams
-        bigram_counter = Counter()
-
-        for title in titles:
-            # Clean and tokenize
-            cleaned = title.lower().translate(
-                str.maketrans('', '', string.punctuation)
-            )
-            words = cleaned.split()
-
-            # Filter out stop words, short words, and words containing numbers
-            meaningful_words = [
-                word for word in words
-                if word not in STOP_WORDS
-                and len(word) > 2
-                and not any(c.isdigit() for c in word)  # Filter words with ANY digits
-            ]
-            word_counter.update(meaningful_words)
-
-            # Extract bigrams (consecutive pairs of meaningful words)
-            for i in range(len(meaningful_words) - 1):
-                bigram = f"{meaningful_words[i]} {meaningful_words[i + 1]}"
-                bigram_counter[bigram] += 1
-
-        # Get top anchor words (these define the "topic")
-        top_words = [word for word, _ in word_counter.most_common(top_n * 2)]
-
-        if not top_words:
-            return []
-
-        # The #1 most common word is the primary anchor (e.g., "nba", "bitcoin")
-        primary_anchor = top_words[0] if top_words else None
-
-        # Build compound keywords: prioritize bigrams with the primary anchor
-        compound_keywords = []
-        used_words = set()
-
-        # First priority: bigrams containing the primary anchor
-        if primary_anchor:
-            for bigram, count in bigram_counter.most_common(top_n * 5):
-                if len(compound_keywords) >= top_n:
-                    break
-                if primary_anchor in bigram.split():
-                    compound_keywords.append(bigram)
-                    used_words.update(bigram.split())
-
-        # Second priority: other bigrams with top words (but not generic ones)
         generic_words = {
             'january', 'february', 'march', 'april', 'may', 'june',
             'july', 'august', 'september', 'october', 'november', 'december',
-            'season', 'game',
+            'season', 'game', 'before', 'after', 'end', 'start',
         }
 
-        for bigram, count in bigram_counter.most_common(top_n * 5):
-            if len(compound_keywords) >= top_n:
+        # Clean and tokenize
+        cleaned = title.lower().translate(
+            str.maketrans('', '', string.punctuation)
+        )
+        words = cleaned.split()
+
+        # Filter out stop words, short words, and words containing numbers
+        meaningful_words = [
+            word for word in words
+            if word not in STOP_WORDS
+            and word not in generic_words
+            and len(word) > 2
+            and not any(c.isdigit() for c in word)
+        ]
+
+        if not meaningful_words:
+            return []
+
+        keywords = []
+
+        # Extract bigrams first (consecutive pairs)
+        for i in range(len(meaningful_words) - 1):
+            if len(keywords) >= top_n:
                 break
-            words_in_bigram = set(bigram.split())
-            # Skip if bigram is just generic words
-            if words_in_bigram <= generic_words:
-                continue
-            # Must contain a top word
-            if words_in_bigram & set(top_words[:3]) and bigram not in compound_keywords:
-                compound_keywords.append(bigram)
-                used_words.update(words_in_bigram)
+            bigram = f"{meaningful_words[i]} {meaningful_words[i + 1]}"
+            keywords.append(bigram)
 
-        # Fill remaining slots with the primary anchor alone if not enough bigrams
-        if len(compound_keywords) < top_n and primary_anchor and primary_anchor not in compound_keywords:
-            compound_keywords.append(primary_anchor)
+        # Fill remaining slots with single words if needed
+        for word in meaningful_words:
+            if len(keywords) >= top_n:
+                break
+            if word not in ' '.join(keywords):
+                keywords.append(word)
 
-        return compound_keywords[:top_n]
+        return keywords[:top_n]
+
+    def _extract_keywords(self, titles: List[str], top_n: int = 6) -> List[str]:
+        """
+        Extract keywords using proportional allocation across all titles.
+
+        Distributes keyword budget evenly across watchlist items to ensure
+        diverse watchlists get representation from each item.
+
+        Args:
+            titles: List of market titles to analyze.
+            top_n: Total keyword budget to distribute.
+
+        Returns:
+            List of keywords with representation from each title.
+        """
+        if not titles:
+            return []
+
+        # Calculate keywords per title (at least 1 each)
+        keywords_per_title = max(1, top_n // len(titles))
+        extra_slots = top_n - (keywords_per_title * len(titles))
+
+        all_keywords = []
+        seen_keywords = set()
+
+        for i, title in enumerate(titles):
+            # Give extra slots to first few titles if budget doesn't divide evenly
+            n_keywords = keywords_per_title + (1 if i < extra_slots else 0)
+            title_keywords = self._extract_keywords_from_title(title, top_n=n_keywords)
+
+            for kw in title_keywords:
+                if kw not in seen_keywords:
+                    all_keywords.append(kw)
+                    seen_keywords.add(kw)
+
+        return all_keywords[:top_n]
 
     def _extract_negative_keywords(self, titles: List[str]) -> Set[str]:
         """
@@ -506,6 +506,86 @@ class SearchRecommender:
             "matching_negative": list(matching_negative) if matching_negative else []
         }
 
+    def _select_diverse_results(
+        self,
+        scored_markets: List[Dict[str, Any]],
+        keywords: List[str],
+        top_n: int
+    ) -> List[Dict[str, Any]]:
+        """
+        Select diverse results ensuring quota per source keyword.
+
+        Distributes result slots across keywords to ensure each topic
+        in the watchlist gets representation in the final recommendations.
+
+        Args:
+            scored_markets: List of scored market dictionaries.
+            keywords: List of keywords used for searching.
+            top_n: Number of recommendations to return.
+
+        Returns:
+            List of diverse recommendations.
+        """
+        if not scored_markets or not keywords:
+            return scored_markets[:top_n]
+
+        # Group markets by their source keyword
+        keyword_buckets = {kw: [] for kw in keywords}
+        for market in scored_markets:
+            source_kw = market.get("query_matched", "")
+            if source_kw in keyword_buckets:
+                keyword_buckets[source_kw].append(market)
+
+        # Sort each bucket by score
+        for kw in keyword_buckets:
+            keyword_buckets[kw].sort(key=lambda x: x["score"], reverse=True)
+
+        # Calculate quota per keyword (at least 1 each if possible)
+        num_keywords = len(keywords)
+        quota_per_keyword = max(1, top_n // num_keywords)
+        extra_slots = top_n - (quota_per_keyword * num_keywords)
+
+        if self.debug:
+            print(f"\n{'='*60}")
+            print("DIVERSE SELECTION")
+            print(f"{'='*60}")
+            print(f"Keywords: {num_keywords}, Quota per keyword: {quota_per_keyword}, Extra slots: {extra_slots}")
+
+        # First pass: fill quota from each keyword
+        selected = []
+        selected_ids = set()
+
+        for i, kw in enumerate(keywords):
+            quota = quota_per_keyword + (1 if i < extra_slots else 0)
+            bucket = keyword_buckets[kw]
+            added = 0
+
+            for market in bucket:
+                if added >= quota:
+                    break
+                if market["id"] not in selected_ids:
+                    selected.append(market)
+                    selected_ids.add(market["id"])
+                    added += 1
+
+            if self.debug:
+                print(f"  '{kw}': added {added}/{quota} (bucket size: {len(bucket)})")
+
+        # Second pass: if we still have slots, fill with highest scoring remaining
+        if len(selected) < top_n:
+            remaining = [m for m in scored_markets if m["id"] not in selected_ids]
+            remaining.sort(key=lambda x: x["score"], reverse=True)
+            for market in remaining:
+                if len(selected) >= top_n:
+                    break
+                selected.append(market)
+                selected_ids.add(market["id"])
+
+        # Sort final selection by score
+        selected.sort(key=lambda x: x["score"], reverse=True)
+
+        return selected[:top_n]
+
     def get_recommendations(
         self,
         watchlist: List[Dict[str, Any]],
@@ -552,7 +632,7 @@ class SearchRecommender:
 
         if positive_keywords is None:
             # Fallback to heuristic extraction
-            positive_keywords = self._extract_keywords(watchlist_titles, top_n=3)
+            positive_keywords = self._extract_keywords(watchlist_titles, top_n=6)
             if self.debug:
                 print(f"\nKeywords (heuristic): {positive_keywords}")
         else:
@@ -587,12 +667,18 @@ class SearchRecommender:
 
         scored_markets = []
         watchlist_ids = {m.get("id") for m in watchlist}
+        watchlist_titles = {m.get("title", "").lower().strip() for m in watchlist}
 
         for market_id, market in candidates.items():
-            # Skip markets already in watchlist
+            # Skip markets already in watchlist (check both ID and title)
             if market_id in watchlist_ids:
                 if self.debug:
-                    print(f"\n  SKIPPED (in watchlist): '{market['title'][:40]}...'")
+                    print(f"\n  SKIPPED (in watchlist by ID): '{market['title'][:40]}...'")
+                continue
+
+            if market["title"].lower().strip() in watchlist_titles:
+                if self.debug:
+                    print(f"\n  SKIPPED (in watchlist by title): '{market['title'][:40]}...'")
                 continue
 
             score_result = self._calculate_score(market, negative_keywords, max_log_volume)
@@ -605,17 +691,18 @@ class SearchRecommender:
                 "penalized": score_result["penalized"],
             })
 
-        # Step 5: Sort by score descending and return top N
-        scored_markets.sort(key=lambda x: x["score"], reverse=True)
-        recommendations = scored_markets[:top_n]
+        # Step 5: Diverse selection with quota per keyword
+        recommendations = self._select_diverse_results(
+            scored_markets, positive_keywords, top_n
+        )
 
         if self.debug:
             print(f"\n{'='*60}")
-            print(f"TOP {top_n} RECOMMENDATIONS")
+            print(f"TOP {top_n} RECOMMENDATIONS (diverse)")
             print(f"{'='*60}")
             for i, rec in enumerate(recommendations, 1):
                 penalty_flag = " [PENALIZED]" if rec.get("penalized") else ""
-                print(f"{i}. Score: {rec['score']:.4f}{penalty_flag}")
+                print(f"{i}. Score: {rec['score']:.4f}{penalty_flag} [from: {rec.get('query_matched', 'unknown')}]")
                 print(f"   {rec['title']}")
                 print(f"   Volume: ${rec['volume']:,} | Vol: {rec['volume_score']:.2f} | Nov: {rec['novelty_score']:.2f}")
 

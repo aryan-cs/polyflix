@@ -2,6 +2,90 @@ import React, { useState, useEffect, useRef } from 'react';
 import './MarketCard.css';
 import realImage from './images3.svg';
 
+// Extract keywords from market title
+function extractKeywords(title) {
+  if (!title) return ['Market', 'Prediction'];
+  
+  const stopWords = ['will', 'market', 'the', 'by', 'end', 'of', 'before', 'after', 'reach', 'price', 'and', 'or', 'to', 'a', 'an', 'in', 'on', 'at', 'for', 'with', 'from'];
+  // Match words that are 3+ characters and don't contain numbers
+  const words = title.toLowerCase().match(/\b[a-zA-Z]{3,}\b/g) || [];
+  let keywords = words.filter(word => !stopWords.includes(word));
+  
+  // Ensure we have 2-3 keywords
+  if (keywords.length < 2) {
+    // Add fallback words if we don't have enough
+    const fallbacks = ['Market', 'Prediction', 'Event'];
+    keywords = [...keywords, ...fallbacks].slice(0, 3);
+  } else if (keywords.length > 3) {
+    keywords = keywords.slice(0, 3);
+  }
+  
+  return keywords.length >= 2 ? keywords : ['Market', 'Prediction'];
+}
+
+// Calculate time until resolution
+function getTimeUntilResolution(endDate) {
+  if (!endDate) return 'TBD';
+  
+  try {
+    const end = new Date(endDate);
+    const now = new Date();
+    const diff = end.getTime() - now.getTime();
+    
+    if (diff <= 0) return 'Ended';
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (days > 365) {
+      const years = Math.floor(days / 365);
+      return `${years}y`;
+    } else if (days > 30) {
+      const months = Math.floor(days / 30);
+      return `${months}mo`;
+    } else if (days > 0) {
+      return `${days}d`;
+    } else if (hours > 0) {
+      return `${hours}h`;
+    } else {
+      return `${minutes}m`;
+    }
+  } catch {
+    return 'TBD';
+  }
+}
+
+// Get market status
+function getMarketStatus(market) {
+  const endDate = market.endDate || market.end_date;
+  if (!endDate) return 'ACTIVE';
+  
+  try {
+    const end = new Date(endDate);
+    const now = new Date();
+    return end.getTime() > now.getTime() ? 'ACTIVE' : 'CLOSED';
+  } catch {
+    return 'ACTIVE';
+  }
+}
+
+// Get market category/tag
+function getMarketTag(market) {
+  const category = market.category;
+  if (category) {
+    return category.charAt(0).toUpperCase() + category.slice(1);
+  }
+  
+  const title = (market.title || market.question || '').toLowerCase();
+  if (title.includes('bitcoin') || title.includes('crypto')) return 'Crypto';
+  if (title.includes('trump') || title.includes('election')) return 'Politics';
+  if (title.includes('sports') || title.includes('nba')) return 'Sports';
+  if (title.includes('stock') || title.includes('earnings')) return 'Finance';
+  
+  return 'Market';
+}
+
 function MarketCard({ market, onSelectMarket }) {
   const [isHovered, setIsHovered] = useState(false);
   const [videoId, setVideoId] = useState(null);
@@ -112,8 +196,8 @@ function MarketCard({ market, onSelectMarket }) {
                     <img src={realImage} alt="Play" style={{ width: '24px', height: '24px', filter: 'hue-rotate(0deg) saturate(0.3) brightness(1.2)' }} />
                   </button>
                   <button className="marketCard__control" aria-label="Add to My List">
-                    <svg viewBox="0 0 24 24" width="24" height="24" data-icon="PlusMedium" aria-hidden="true" fill="none">
-                      <path fill="currentColor" fillRule="evenodd" d="M11 11V2h2v9h9v2h-9v9h-2v-9H2v-2z" clipRule="evenodd"></path>
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+                      <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 10V8.2c0-1.12 0-1.68.218-2.108a2 2 0 01.874-.874C4.52 5 5.08 5 6.2 5h11.6c1.12 0 1.68 0 2.108.218a2 2 0 01.874.874C21 6.52 21 7.08 21 8.2V10m-18 0h18m-18 0v6.8c0 1.12 0 1.68.218 2.108a2 2 0 00.874.874C4.52 19 5.08 19 6.2 19h11.6c1.12 0 1.68 0 2.108-.218a2 2 0 00.874-.874C21 17.48 21 16.92 21 15.8V10M9 13h1m4 0h1"/>
                     </svg>
                   </button>
                   <button className="marketCard__control" aria-label="Like">
@@ -130,17 +214,23 @@ function MarketCard({ market, onSelectMarket }) {
               </div>
 
               <div className="marketCard__metaRow">
-                <span className="marketCard__rating">R</span>
-                <span className="marketCard__duration">3h</span>
-                <span className="marketCard__hd">HD</span>
+                <span className="marketCard__rating">{getMarketTag(market)}</span>
+                <span className="marketCard__duration">{getTimeUntilResolution(market.endDate || market.end_date)}</span>
+                <span 
+                  className="marketCard__status" 
+                  data-status={getMarketStatus(market)}
+                >
+                  {getMarketStatus(market)}
+                </span>
               </div>
 
               <div className="marketCard__tags">
-                <span>Slick</span>
-                <span>•</span>
-                <span>Raunchy</span>
-                <span>•</span>
-                <span>Dark Comedy</span>
+                {extractKeywords(marketTitle).map((keyword, index, array) => (
+                  <React.Fragment key={keyword}>
+                    <span>{keyword.charAt(0).toUpperCase() + keyword.slice(1)}</span>
+                    {index < array.length - 1 && <span>•</span>}
+                  </React.Fragment>
+                ))}
               </div>
 
               <div className="marketCard__priceInline">

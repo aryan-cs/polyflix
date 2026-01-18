@@ -43,24 +43,44 @@ function App() {
           fetch('http://localhost:5002/api/polymarket/earnings?limit=20').then(res => res.json()),
         ]);
 
-        const enrich = (markets) => (markets || []).map(m => {
-          // Map backend fields to frontend expectations
-          const title = m.title || m.question || "Untitled Market";
-          const image = m.image || m.icon; // Polymarket often returns 'icon'
+        const enrich = async (markets) => {
+          const enriched = await Promise.all((markets || []).map(async (m) => {
+            // Map backend fields to frontend expectations
+            const title = m.title || m.question || "Untitled Market";
+            const existingImage = m.image || m.icon;
+            
+            let dynamicImage = existingImage;
+            
+            // Get dynamic image if no existing image or for better variety
+            if (!existingImage) {
+              try {
+                const imageResponse = await fetch(`http://localhost:5002/api/images/search?market=${encodeURIComponent(JSON.stringify({ ...m, title }))}`);
+                if (imageResponse.ok) {
+                  const imageData = await imageResponse.json();
+                  dynamicImage = imageData.imageUrl;
+                }
+              } catch (error) {
+                console.warn('Image search failed for market:', title);
+                // Keep existing image or use default
+              }
+            }
+            
+            return { 
+              ...m, 
+              title,
+              image: dynamicImage
+            };
+          }));
           
-          return { 
-            ...m, 
-            title,
-            image: getMarketImage({ ...m, title, image }) 
-          };
-        });
+          return enriched;
+        };
 
-        const sportsEnriched = enrich(sports.markets);
-        const trendingEnriched = enrich(trending.markets);
-        const politicsEnriched = enrich(politics.markets);
-        const cryptoEnriched = enrich(crypto.markets);
-        const popCultureEnriched = enrich(popculture.markets);
-        const financeEnriched = enrich(finance.markets);
+        const sportsEnriched = await enrich(sports.markets);
+        const trendingEnriched = await enrich(trending.markets);
+        const politicsEnriched = await enrich(politics.markets);
+        const cryptoEnriched = await enrich(crypto.markets);
+        const popCultureEnriched = await enrich(popculture.markets);
+        const financeEnriched = await enrich(finance.markets);
 
         setSportsMarkets(sportsEnriched);
         setTrendingMarkets(trendingEnriched);
@@ -68,9 +88,9 @@ function App() {
         setCryptoMarkets(cryptoEnriched);
         setPopCultureMarkets(popCultureEnriched);
         setFinanceMarkets(financeEnriched);
-        setTechMarkets(enrich(tech.markets));
-        setClimateMarkets(enrich(climate.markets));
-        setEarningsMarkets(enrich(earnings.markets));
+        setTechMarkets(await enrich(tech.markets));
+        setClimateMarkets(await enrich(climate.markets));
+        setEarningsMarkets(await enrich(earnings.markets));
 
         // Pick a random featured market from the top categories
         const featuredPool = [

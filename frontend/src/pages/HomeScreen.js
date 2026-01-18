@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import '../App.css';
 import Navbar from '../components/Navbar';
 import Banner from '../components/Banner';
@@ -20,8 +20,13 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [selectedMarket, setSelectedMarket] = useState(null);
   const [featuredMarket, setFeaturedMarket] = useState(null);
+  const hasFetchedRef = useRef(false);
 
   useEffect(() => {
+    // Prevent double-fetch in React StrictMode
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+
     const fetchAllCategories = async () => {
       try {
         console.log("🚀 Fetching all market categories from backend...");

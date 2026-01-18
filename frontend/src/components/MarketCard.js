@@ -13,7 +13,25 @@ function MarketCard({ market, onSelectMarket }) {
     market?.event?.category ||
     market?.event?.title ||
     'Market';
-  const endLabel = market?.endDate || market?.end_date || market?.end_time || 'TBD';
+  const endValue = market?.endDate || market?.end_date || market?.end_time;
+  const getTimeUntil = (value) => {
+    if (!value) return 'TBD';
+    const parsed =
+      typeof value === 'number'
+        ? new Date(value)
+        : new Date(String(value).replace(/(\d+)(st|nd|rd|th)/gi, '$1'));
+    if (Number.isNaN(parsed.getTime())) return 'TBD';
+    const diffMs = parsed.getTime() - Date.now();
+    if (diffMs <= 0) return 'Resolved';
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const days = Math.floor(diffMinutes / (60 * 24));
+    const hours = Math.floor((diffMinutes % (60 * 24)) / 60);
+    const minutes = diffMinutes % 60;
+    if (days >= 1) return `${days}d ${hours}h`;
+    if (hours >= 1) return `${hours}h ${minutes}m`;
+    return `${minutes}m`;
+  };
+  const timeUntilLabel = getTimeUntil(endValue);
   const keywords = (() => {
     const tokens = [
       market?.category,
@@ -113,9 +131,7 @@ function MarketCard({ market, onSelectMarket }) {
                       handleOpen();
                     }}
                   >
-                    <svg viewBox="0 0 24 24" width="24" height="24" data-icon="PlayMedium" aria-hidden="true" fill="none">
-                      <path fill="currentColor" d="M5 2.7a1 1 0 0 1 1.48-.88l16.93 9.3a1 1 0 0 1 0 1.76l-16.93 9.3A1 1 0 0 1 5 21.31z"></path>
-                    </svg>
+                    <span className="marketCard__control-fill" aria-hidden="true" />
                   </button>
                   <button className="marketCard__control" aria-label="Add to My List">
                     <svg viewBox="0 0 24 24" width="24" height="24" data-icon="PlusMedium" aria-hidden="true" fill="none">
@@ -137,8 +153,7 @@ function MarketCard({ market, onSelectMarket }) {
 
             <div className="marketCard__metaRow">
                 <span className="marketCard__rating">{categoryLabel}</span>
-                <span className="marketCard__duration">{endLabel}</span>
-              <span className="marketCard__hd">HD</span>
+                <span className="marketCard__duration">{timeUntilLabel}</span>
             </div>
 
               <div className="marketCard__tags">
@@ -146,7 +161,7 @@ function MarketCard({ market, onSelectMarket }) {
                   (word, index) => (
                     <React.Fragment key={`${word}-${index}`}>
                       {index > 0 && <span> • </span>}
-                      <span>{word}</span>
+                      <span>{word.toUpperCase()}</span>
                     </React.Fragment>
                   )
                 )}

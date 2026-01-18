@@ -48,8 +48,10 @@ async function discoverCategoryTags(categoryKeywords, maxTags = 100) {
   }
 }
 
-async function fetchMarketsForTags(tagIds, limit = 20) {
-  console.log(`\n🚀 [FETCHING] ${tagIds.length} tags → target ${limit} markets`);
+async function fetchMarketsForTags(tagIds, limit = 20, strategy = 'top') {
+  console.log(
+    `\n🚀 [FETCHING] ${tagIds.length} tags → target ${limit} markets (${strategy})`
+  );
   
   const allMarkets = [];
   
@@ -68,7 +70,7 @@ async function fetchMarketsForTags(tagIds, limit = 20) {
   );
   
   results.forEach((markets, i) => {
-    console.log(`   📊 Tag ${i+1}: ${markets.length} markets`);
+    console.log(`   📊 Tag ${i + 1}: ${markets.length} markets`);
     allMarkets.push(...markets);
   });
   
@@ -82,14 +84,66 @@ async function fetchMarketsForTags(tagIds, limit = 20) {
     }
   });
   
-  // Sort by volume and return top N
-  const finalMarkets = Array.from(uniqueMarketsMap.values())
-    .sort((a, b) => (b.volumeNum || 0) - (a.volumeNum || 0))
-    .slice(0, limit);
+  const uniqueMarkets = Array.from(uniqueMarketsMap.values()).sort(
+    (a, b) => (b.volumeNum || 0) - (a.volumeNum || 0)
+  );
+
+  if (strategy !== 'balanced') {
+    const finalMarkets = uniqueMarkets.slice(0, limit);
+    console.log(
+      `✅ [RESULT] ${finalMarkets.length}/${limit} unique markets (total deduped: ${uniqueMarketsMap.size})`
+    );
+    return finalMarkets;
+  }
+
+  // Balanced strategy: round-robin per tag to diversify topics.
+  const perTagMarkets = results.map((markets) =>
+    (markets || [])
+      .filter((market) => market && market.id)
+      .sort((a, b) => (b.volumeNum || 0) - (a.volumeNum || 0))
+  );
+  const perTagIndices = new Array(perTagMarkets.length).fill(0);
+  const seen = new Set();
+  const balancedMarkets = [];
+
+  while (balancedMarkets.length < limit) {
+    let added = false;
+    for (let i = 0; i < perTagMarkets.length; i += 1) {
+      const list = perTagMarkets[i];
+      let idx = perTagIndices[i];
+      while (idx < list.length && seen.has(list[idx].id)) {
+        idx += 1;
+      }
+      perTagIndices[i] = idx;
+      if (idx < list.length) {
+        const market = list[idx];
+        perTagIndices[i] += 1;
+        if (!seen.has(market.id)) {
+          seen.add(market.id);
+          balancedMarkets.push(market);
+          added = true;
+          if (balancedMarkets.length >= limit) break;
+        }
+      }
+    }
+    if (!added) break;
+  }
+
+  if (balancedMarkets.length < limit) {
+    for (const market of uniqueMarkets) {
+      if (balancedMarkets.length >= limit) break;
+      if (!seen.has(market.id)) {
+        seen.add(market.id);
+        balancedMarkets.push(market);
+      }
+    }
+  }
     
-  console.log(`✅ [RESULT] ${finalMarkets.length}/${limit} unique markets (total deduped: ${uniqueMarketsMap.size})`);
-  
-  return finalMarkets;
+  console.log(
+    `✅ [RESULT] ${balancedMarkets.length}/${limit} unique markets (total deduped: ${uniqueMarketsMap.size})`
+  );
+
+  return balancedMarkets;
 }
 
 // Trending route
@@ -126,6 +180,7 @@ router.get('/trending', async (req, res) => {
 router.get('/:category(sports|politics|crypto|popculture|finance|tech|climate|earnings)', async (req, res) => {
   const { category } = req.params;
   const limit = parseInt(req.query.limit) || 20;
+  const strategy = req.query.strategy || 'top';
   
   console.log(`\n🌟 [${category.toUpperCase()}] Requested ${limit} markets`);
   
@@ -137,7 +192,7 @@ router.get('/:category(sports|politics|crypto|popculture|finance|tech|climate|ea
       return res.json({ category, count: 0, markets: [] });
     }
     
-    const markets = await fetchMarketsForTags(tags.map(t => t.id), limit);
+    const markets = await fetchMarketsForTags(tags.map(t => t.id), limit, strategy);
     
     console.log(`✅ SUCCESS: ${markets.length}/${limit} markets for ${category}`);
     

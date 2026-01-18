@@ -1,6 +1,6 @@
 # Polyflix
 
-Netflix-style UI for Polymarket.
+Binge markets.
 
 ## Structure
 

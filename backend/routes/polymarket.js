@@ -171,25 +171,33 @@ router.get('/search', async (req, res) => {
     const markets = [];
 
     // Extract markets from events (Gamma public-search API structure)
+    // Only take ONE market per event (highest volume) to ensure diversity
     for (const event of data.events || []) {
-      // Each event can have multiple markets
-      for (const market of event.markets || []) {
-        markets.push({
-          id: market.id || event.id,
-          title: market.question || event.title,
-          question: market.question || event.title,
-          volumeNum: parseFloat(market.volume || event.volume || 0),
-          image: event.image || '',
-          slug: event.slug || market.slug || '',
-          endDate: market.endDate || event.endDate || '',
-          category: event.category || '',
-          outcomePrices: market.outcomePrices || null,
-          hasBinaryOutcomes: market.hasBinaryOutcomes !== undefined ? market.hasBinaryOutcomes : true,
-        });
-      }
+      const eventMarkets = event.markets || [];
 
-      // If no markets array, treat the event itself as a market
-      if (!event.markets || event.markets.length === 0) {
+      if (eventMarkets.length > 0) {
+        // Pick the highest-volume market from this event
+        const bestMarket = eventMarkets.reduce((best, current) => {
+          const bestVol = parseFloat(best.volume || 0);
+          const currentVol = parseFloat(current.volume || 0);
+          return currentVol > bestVol ? current : best;
+        }, eventMarkets[0]);
+
+        markets.push({
+          id: bestMarket.id || event.id,
+          title: bestMarket.question || event.title,
+          question: bestMarket.question || event.title,
+          volumeNum: parseFloat(bestMarket.volume || event.volume || 0),
+          image: event.image || '',
+          slug: event.slug || bestMarket.slug || '',
+          endDate: bestMarket.endDate || event.endDate || '',
+          category: event.category || '',
+          outcomePrices: bestMarket.outcomePrices || null,
+          hasBinaryOutcomes: bestMarket.hasBinaryOutcomes !== undefined ? bestMarket.hasBinaryOutcomes : true,
+          eventId: event.id, // Track event for debugging
+        });
+      } else {
+        // No markets array, treat the event itself as a market
         markets.push({
           id: event.id,
           title: event.title,
@@ -201,6 +209,7 @@ router.get('/search', async (req, res) => {
           category: event.category || '',
           outcomePrices: null,
           hasBinaryOutcomes: true,
+          eventId: event.id,
         });
       }
     }

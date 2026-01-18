@@ -119,12 +119,15 @@ STOP_WORDS = {
 }
 
 
-def search_gamma_api(query: str) -> List[Dict[str, Any]]:
+def search_gamma_api(query: str, dedupe_events: bool = True) -> List[Dict[str, Any]]:
     """
     Search the Polymarket Gamma API for markets matching the query.
 
     Args:
         query: Search term to find markets.
+        dedupe_events: If True, only return one market per event (highest volume).
+                       This prevents showing multiple similar markets like
+                       "X by Jan 15", "X by Feb 1" from the same event.
 
     Returns:
         List of market dictionaries with id, title, and volume.
@@ -145,23 +148,42 @@ def search_gamma_api(query: str) -> List[Dict[str, Any]]:
 
         # Extract markets from events
         for event in data.get("events", []):
-            # Each event can have multiple markets
-            for market in event.get("markets", []):
-                markets.append({
-                    "id": market.get("id", ""),
-                    "title": market.get("question", event.get("title", "")),
-                    "volume": int(float(market.get("volume", 0))),
-                    "query_matched": query,
-                    "image": event.get("image", ""),
-                    "slug": event.get("slug", ""),
-                    "created_at": market.get("createdAt") or event.get("createdAt"),
-                    "end_date": market.get("endDate") or event.get("endDate"),
-                })
+            event_id = event.get("id", "")
+            event_markets = event.get("markets", [])
 
-            # If no markets array, treat the event itself as a market
-            if not event.get("markets"):
+            if event_markets:
+                if dedupe_events:
+                    # Only keep the highest-volume market from each event
+                    best_market = max(event_markets, key=lambda m: float(m.get("volume", 0)))
+                    markets.append({
+                        "id": best_market.get("id", ""),
+                        "title": best_market.get("question", event.get("title", "")),
+                        "volume": int(float(best_market.get("volume", 0))),
+                        "query_matched": query,
+                        "image": event.get("image", ""),
+                        "slug": event.get("slug", ""),
+                        "created_at": best_market.get("createdAt") or event.get("createdAt"),
+                        "end_date": best_market.get("endDate") or event.get("endDate"),
+                        "event_id": event_id,
+                    })
+                else:
+                    # Return all markets from the event
+                    for market in event_markets:
+                        markets.append({
+                            "id": market.get("id", ""),
+                            "title": market.get("question", event.get("title", "")),
+                            "volume": int(float(market.get("volume", 0))),
+                            "query_matched": query,
+                            "image": event.get("image", ""),
+                            "slug": event.get("slug", ""),
+                            "created_at": market.get("createdAt") or event.get("createdAt"),
+                            "end_date": market.get("endDate") or event.get("endDate"),
+                            "event_id": event_id,
+                        })
+            else:
+                # No markets array, treat the event itself as a market
                 markets.append({
-                    "id": event.get("id", ""),
+                    "id": event_id,
                     "title": event.get("title", ""),
                     "volume": int(float(event.get("volume", 0))),
                     "query_matched": query,
@@ -169,6 +191,7 @@ def search_gamma_api(query: str) -> List[Dict[str, Any]]:
                     "slug": event.get("slug", ""),
                     "created_at": event.get("createdAt"),
                     "end_date": event.get("endDate"),
+                    "event_id": event_id,
                 })
 
         return markets

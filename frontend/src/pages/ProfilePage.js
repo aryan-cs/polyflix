@@ -43,59 +43,6 @@ const extractKeywords = (markets) => {
     .map(([word, count]) => ({ word, count }));
 };
 
-// Calculate category percentages from markets
-const calculateCategoryBreakdown = (markets) => {
-  const categoryCounts = {};
-  let total = 0;
-
-  markets.forEach(market => {
-    // Try to infer category from market data or title
-    let category = market.category || inferCategory(market.title);
-    if (category) {
-      category = category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
-      categoryCounts[category] = (categoryCounts[category] || 0) + 1;
-      total++;
-    }
-  });
-
-  if (total === 0) return [];
-
-  return Object.entries(categoryCounts)
-    .map(([category, count]) => ({
-      category,
-      percentage: Math.round((count / total) * 100),
-      count
-    }))
-    .sort((a, b) => b.percentage - a.percentage);
-};
-
-// Infer category from market title if not explicitly set
-const inferCategory = (title) => {
-  if (!title) return 'Other';
-  const lowerTitle = title.toLowerCase();
-
-  if (/nba|nfl|mlb|nhl|soccer|football|basketball|baseball|hockey|sport|team|game|championship|playoffs|finals|bowl/.test(lowerTitle)) {
-    return 'Sports';
-  }
-  if (/bitcoin|ethereum|crypto|btc|eth|token|blockchain|coin/.test(lowerTitle)) {
-    return 'Crypto';
-  }
-  if (/trump|biden|election|president|congress|senate|democrat|republican|vote|political|governor/.test(lowerTitle)) {
-    return 'Politics';
-  }
-  if (/stock|earnings|gdp|fed|interest rate|inflation|economy|recession/.test(lowerTitle)) {
-    return 'Finance';
-  }
-  if (/movie|music|celebrity|oscar|grammy|album|artist|actor|actress|entertainment/.test(lowerTitle)) {
-    return 'Culture';
-  }
-  if (/ai|tech|apple|google|microsoft|openai|software|app/.test(lowerTitle)) {
-    return 'Tech';
-  }
-
-  return 'Other';
-};
-
 // Get category color
 const getCategoryColor = (category) => {
   const colors = {
@@ -105,14 +52,15 @@ const getCategoryColor = (category) => {
     Finance: '#50c878',
     Culture: '#9b59b6',
     Tech: '#00bcd4',
+    Entertainment: '#9b59b6',
+    Science: '#00bcd4',
+    Business: '#50c878',
     Other: '#808080'
   };
   return colors[category] || colors.Other;
 };
 
 function ProfilePage() {
-  const [watchlists, setWatchlists] = useState([]);
-  const [blacklist, setBlacklist] = useState([]);
   const [keywords, setKeywords] = useState([]);
   const [categories, setCategories] = useState([]);
   const [stats, setStats] = useState({
@@ -122,14 +70,12 @@ function ProfilePage() {
   });
   const [aiSummary, setAiSummary] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
 
   useEffect(() => {
     // Load data from localStorage
     const loadedWatchlists = getWatchlists();
     const loadedBlacklist = getBlacklist();
-
-    setWatchlists(loadedWatchlists);
-    setBlacklist(loadedBlacklist);
 
     // Aggregate all markets from watchlists
     const allMarkets = loadedWatchlists.flatMap(w => w.markets);
@@ -138,10 +84,6 @@ function ProfilePage() {
     const extractedKeywords = extractKeywords(allMarkets);
     setKeywords(extractedKeywords);
 
-    // Calculate category breakdown
-    const categoryBreakdown = calculateCategoryBreakdown(allMarkets);
-    setCategories(categoryBreakdown);
-
     // Calculate stats
     setStats({
       totalWatchlists: loadedWatchlists.length,
@@ -149,47 +91,68 @@ function ProfilePage() {
       totalDislikes: loadedBlacklist.length
     });
 
-    // Generate AI summary if we have data
+    // Generate AI-powered content if we have data
     if (allMarkets.length > 0) {
-      generateAiSummary(extractedKeywords, categoryBreakdown, loadedBlacklist);
+      generateAiContent(allMarkets, loadedBlacklist);
     }
   }, []);
 
-  const generateAiSummary = async (keywordData, categoryData, dislikedMarkets) => {
+  const generateAiContent = async (markets, dislikedMarkets) => {
+    const API_KEY = process.env.REACT_APP_GEMINI_API_KEY;
+    if (!API_KEY) {
+      console.error('REACT_APP_GEMINI_API_KEY not set');
+      return;
+    }
+
+    const marketTitles = markets.map(m => m.title).join('\n- ');
+    const dislikedTitles = dislikedMarkets.map(m => m.title).join('\n- ');
+
+    // Generate both summary and categories in parallel
     setAiLoading(true);
+    setCategoriesLoading(true);
+
+    // Generate AI Summary
+    generateAiSummary(API_KEY, marketTitles, dislikedTitles);
+
+    // Generate Category Breakdown
+    generateCategoryBreakdown(API_KEY, marketTitles);
+  };
+
+  const generateAiSummary = async (API_KEY, marketTitles, dislikedTitles) => {
     try {
-      const API_KEY = process.env.REACT_APP_GEMINI_API_KEY;
-      const URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent';
+      const response = await fetch(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': API_KEY
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: `You are analyzing a user's prediction market interests on Polyflix (a Netflix-style UI for Polymarket). Based on their watchlist, write a brief, engaging 2-3 sentence profile summary describing their interests and trading personality. Be conversational and insightful.
 
-      const topKeywords = keywordData.slice(0, 8).map(k => k.word).join(', ');
-      const topCategories = categoryData.slice(0, 3).map(c => `${c.category} (${c.percentage}%)`).join(', ');
-      const dislikes = dislikedMarkets.slice(0, 5).map(m => m.title).join('; ');
+Markets in their watchlists:
+- ${marketTitles}
 
-      const response = await fetch(URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': API_KEY
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `You are analyzing a user's prediction market interests on Polyflix (a Netflix-style UI for Polymarket). Based on their watchlist data, write a brief, engaging 2-3 sentence profile summary describing their interests and trading personality. Be conversational and insightful.
-
-Top keywords from their watchlists: ${topKeywords || 'none yet'}
-Category breakdown: ${topCategories || 'none yet'}
-Topics they've disliked: ${dislikes || 'none'}
+Markets they've disliked:
+- ${dislikedTitles || 'none'}
 
 Write ONLY the summary, no intro or labels. Keep it under 50 words.`
+              }]
             }]
-          }]
-        })
-      });
+          })
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
         setAiSummary(text.trim());
+      } else {
+        const error = await response.text();
+        console.error('Gemini API error (summary):', response.status, error);
       }
     } catch (error) {
       console.error('Error generating AI summary:', error);
@@ -197,6 +160,59 @@ Write ONLY the summary, no intro or labels. Keep it under 50 words.`
       setAiLoading(false);
     }
   };
+
+  const generateCategoryBreakdown = async (API_KEY, marketTitles) => {
+    try {
+      const response = await fetch(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': API_KEY
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: `Analyze these prediction market titles and categorize them. Return a JSON array of categories with percentages that add up to 100.
+
+Markets:
+- ${marketTitles}
+
+Use these category names: Sports, Politics, Crypto, Finance, Tech, Entertainment, Science, Business, Other
+
+Return ONLY a JSON array like this, nothing else:
+[{"category": "Sports", "percentage": 40}, {"category": "Politics", "percentage": 30}, {"category": "Crypto", "percentage": 30}]`
+              }]
+            }]
+          })
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        try {
+          const jsonMatch = text.match(/\[.*\]/s);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            setCategories(parsed.filter(c => c.percentage > 0).sort((a, b) => b.percentage - a.percentage));
+          }
+        } catch (e) {
+          console.error('Error parsing categories JSON:', e, text);
+        }
+      } else {
+        const error = await response.text();
+        console.error('Gemini API error (categories):', response.status, error);
+      }
+    } catch (error) {
+      console.error('Error generating categories:', error);
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
+
+  const blacklist = getBlacklist();
 
   return (
     <div className="profilePage">
@@ -225,7 +241,7 @@ Write ONLY the summary, no intro or labels. Keep it under 50 words.`
         </div>
       </div>
 
-      {(aiSummary || aiLoading || stats.totalMarkets > 0) && (
+      {stats.totalMarkets > 0 && (
         <div className="profilePage__aiSummary">
           <div className="profilePage__aiIcon">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
@@ -242,7 +258,7 @@ Write ONLY the summary, no intro or labels. Keep it under 50 words.`
               <p className="profilePage__aiText">{aiSummary}</p>
             ) : (
               <p className="profilePage__aiText profilePage__aiText--empty">
-                Add more markets to get a personalized insight.
+                Could not generate insight. Check console for errors.
               </p>
             )}
           </div>
@@ -278,8 +294,12 @@ Write ONLY the summary, no intro or labels. Keep it under 50 words.`
 
         <section className="profilePage__section">
           <h2>Category Breakdown</h2>
-          <p className="profilePage__sectionDesc">How your interests are distributed</p>
-          {categories.length > 0 ? (
+          <p className="profilePage__sectionDesc">How your interests are distributed (AI-powered)</p>
+          {categoriesLoading ? (
+            <p className="profilePage__aiText profilePage__aiText--loading">
+              Analyzing categories...
+            </p>
+          ) : categories.length > 0 ? (
             <div className="profilePage__categories">
               <div className="profilePage__categoryBars">
                 {categories.map(({ category, percentage }) => (

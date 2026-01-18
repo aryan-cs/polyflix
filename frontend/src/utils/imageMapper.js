@@ -6,6 +6,15 @@ const IMAGE_POOLS = {
     "https://cloudfront-us-east-2.images.arcpublishing.com/reuters/UABNLZ53JNOSTLD5H56MOAEPK4.jpg",
     "https://cdn.prod.website-files.com/636a159209fc4a2dd6074cb6/67b2bef7150f86e90321bdf8_Bitcoin.jpg",
   ],
+  beast: [
+    "https://i.ytimg.com/vi/C9Qfcjf7L-I/maxresdefault.jpg",
+    "https://m.media-amazon.com/images/S/pv-target-images/ce689202927ce880eec6ca93e6462c69c5568d7aff03ec27d4402de05aa3e619._SX1080_FMjpg_.jpg",
+    "https://www.prg.com/en/-/jssmedia/US/Images/News/2025/Q1/Beast-Games/1920x1080-MrBeast.ashx?mw=800&webp=True",
+    "https://d32qys9a6wm9no.cloudfront.net/images/tvs/backdrop/43/8e777775364fe2a967294f264c28a98e_1280x720.jpg?t=1732608653",
+    "https://i.guim.co.uk/img/media/3ace432d4a2e662e6faa18fec3ceeb57319cb845/66_29_2250_1799/master/2250.jpg?width=1200&quality=85&auto=format&fit=max&s=59e8e7642bbb64b5ecca1bbe554a1d1b",
+    "https://images.thedirect.com/media/article_full/beast-games-top-10.jpg",
+    "https://cdn.mos.cms.futurecdn.net/B44z8UiCeqaPXptnD29wsa-1200-80.jpg",
+  ],
   ethereum: [
     "https://www.tbstat.com/cdn-cgi/image/f=avif,q=50/wp/uploads/2022/08/20220802_Ethereum-Merge-1-1200x675.jpg",
     "https://www.virtune.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fethereum.6f7ea727.png&w=3840&q=75&dpl=dpl_7rA8E7X257ZYhcpAoeu7hgkx3ZE4",
@@ -29,10 +38,14 @@ const IMAGE_POOLS = {
     "https://static01.nyt.com/images/2020/02/19/opinion/19warzelWeb/merlin_169084596_07dcae00-762e-41ad-bc7c-65ffc7b10571-superJumbo.jpg?quality=75&auto=webp"
   ],
   sports: [
-    "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=400&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1471295253337-3ceaaedca402?w=400&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1518611012118-696072aa8795?w=400&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1517466787929-bc90951d0974?w=400&auto=format&fit=crop"
+    "https://media.cnn.com/api/v1/images/stellar/prod/2025-06-14t032500z-1766838514-mt1usatoday26444867-rtrmadp-3-nba-finals-oklahoma-city-thunder-at-indiana-pacers.jpg?c=16x9&q=h_833,w_1480,c_fill",
+    "https://npr.brightspotcdn.com/dims3/default/strip/false/crop/3000x2000+0+0/resize/1100/quality/50/format/jpeg/?url=http%3A%2F%2Fnpr-brightspot.s3.amazonaws.com%2F83%2F0a%2F4819d5714d2f9937bdaa32ef8908%2Fgettyimages-2218021881.jpg",
+    "https://andscape.com/wp-content/uploads/2025/06/GettyImages-2221009435-e1750601222963.jpg?w=800",
+    "https://bloximages.chicago2.vip.townnews.com/bozemandailychronicle.com/content/tncms/assets/v3/editorial/d/5f/d5fb571c-eadc-5840-9c9d-8db6969b6dbe/696b00bf84d10.image.jpg?resize=750%2C500",
+    "https://cdn.nba.com/teams/uploads/sites/1610612741/2026/01/260116_SamSmith_NikolaVucevic_BrooklynNets_16x9.jpg?im=Resize=(640)",
+    "https://media.wired.com/photos/6882789913cec3f5361b5c29/3:2/w_1920,c_limit/Summer%20League%204.jpg",
+    "https://www.gannett-cdn.com/authoring/authoring-images/2025/12/18/SAUB/87828000007-2190323928.jpg?crop=2999,1687,x0,y264",
+    "https://www.novibet.ie/blog-assets/wp-content/uploads/2025/08/Lebron-time-1068x712.jpg"
   ],
   finance: [
     "https://live.staticflickr.com/65535/17123251389_80282733ce_b.jpg",
@@ -68,9 +81,8 @@ export const getMarketImage = (market) => {
   const idHash = market.id ? stringToHash(market.id.toString()) : stringToHash(title);
 
   // For sports and pop culture, use the Polymarket-provided photo
-  if (category === 'sports' || category === 'pop culture' || 
-      title.includes('nba') || title.includes('nfl') || title.includes('sport') || 
-      title.includes('game') || title.includes('music') || title.includes('taylor') || 
+  if (title.includes('nfl') || title.includes('sport') || 
+      title.includes('music') || title.includes('taylor') || 
       title.includes('song') || title.includes('spotify')) {
     return originalImage; // Return null if no image, let placeholder handle it
   }
@@ -87,6 +99,10 @@ export const getMarketImage = (market) => {
     pool = IMAGE_POOLS.trump;
   } else if (title.includes('biden') || title.includes('harris') || title.includes('democrat') || title.includes('election')) {
     pool = IMAGE_POOLS.politics;
+  } else if (title.includes('nba')) {
+    pool = [...IMAGE_POOLS.sports];
+  } else if (title.includes('beast')) {
+    pool = [...IMAGE_POOLS.beast];
   } else if (category === 'crypto') {
     pool = [...IMAGE_POOLS.bitcoin, ...IMAGE_POOLS.ethereum];
   } else if (category === 'politics') {

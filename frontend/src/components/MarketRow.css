@@ -20,7 +20,7 @@
 
 .row__posters {
   display: flex;
-  gap: 10px;
+  gap: 6px;
   overflow-x: scroll;
   overflow-y: hidden;
   padding: 20px 0;

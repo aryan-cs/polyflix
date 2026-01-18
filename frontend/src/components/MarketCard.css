@@ -1,48 +1,67 @@
-.marketCard {
-  min-width: 280px;
-  height: 160px;
-  cursor: pointer;
-  transition: transform 0.3s ease;
+.marketCard-wrapper {
   position: relative;
+  height: 170px;
+  min-width: 315px;
+  z-index: 1;
+}
+
+.marketCard-wrapper:hover {
+  z-index: 999;
+}
+
+.marketCard {
+  width: 100%;
+  height: 100%;
   border-radius: 4px;
+  background-color: #141414;
+  transition: transform 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
   overflow: hidden;
 }
 
-.marketCard:hover {
-  transform: scale(1.08);
-  z-index: 50;
+.marketCard--expanded {
+  position: absolute;
+  top: -60px;
+  left: -20px;
+  width: calc(100% + 40px);
+  height: auto;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+  transform: scale(1.05);
+  overflow: visible;
+  border-radius: 6px;
+  z-index: 100;
+}
+
+.marketCard__imageContainer {
+  width: 100%;
+  height: 170px;
+  position: relative;
 }
 
 .marketCard__image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: opacity 0.3s ease;
-  cursor: pointer;
+  display: block;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
 }
 
-.marketCard__overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.3),
-    rgba(0, 0, 0, 0.8)
-  );
-  opacity: 0;
-  transition: opacity 0.3s ease;
+.marketCard:not(.marketCard--expanded) .marketCard__image {
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+.marketCard__panel {
+  background-color: #181818;
+  padding: 12px;
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  padding: 15px;
-  cursor: pointer;
-}
-
-.marketCard__overlay--visible {
-  opacity: 1;
+  gap: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+  margin-top: -1px;
 }
 
 .marketCard__content {
@@ -51,117 +70,122 @@
   gap: 8px;
 }
 
-.marketCard__title {
-  font-size: 0.95rem;
-  font-weight: 700;
-  margin: 0;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.marketCard__prices {
+.marketCard__actions {
   display: flex;
-  gap: 15px;
-  margin-top: 5px;
-}
-
-.marketCard__price {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.marketCard__price-label {
-  font-size: 0.65rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.marketCard__price-value {
-  font-size: 1.1rem;
-  font-weight: 700;
-}
-
-.marketCard__price--yes .marketCard__price-value {
-  color: #10b981;
-}
-
-.marketCard__price--no .marketCard__price-value {
-  color: #ef4444;
-}
-
-.marketCard__stats {
-  display: flex;
-  gap: 15px;
-  font-size: 0.75rem;
-}
-
-.marketCard__stat {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.marketCard__stat-label {
-  color: #999;
-  font-size: 0.65rem;
-}
-
-.marketCard__stat-value {
-  font-weight: 600;
-  color: #e5e5e5;
-}
-
-.marketCard__meta {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  font-size: 0.7rem;
-  color: #999;
-  margin-top: 5px;
+  justify-content: space-between;
+  margin-top: 4px;
 }
 
-.marketCard__category {
-  background: rgba(255, 255, 255, 0.2);
-  padding: 2px 8px;
-  border-radius: 3px;
-  font-weight: 600;
+.marketCard__actions-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.marketCard__button {
+.marketCard__control {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  background: rgba(42, 42, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s;
+  padding: 0;
+}
+
+.marketCard__control:hover {
+  border-color: white;
+  background: rgba(255,255,255,0.1);
+}
+
+.marketCard__control--primary {
   background: white;
   color: black;
   border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-weight: 700;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 8px;
 }
 
-.marketCard__button:hover {
-  background: rgba(255, 255, 255, 0.85);
-  transform: scale(1.05);
+.marketCard__control--primary:hover {
+  background: #e6e6e6;
+}
+
+.marketCard__control--right {
+  margin-left: auto;
+}
+
+.marketCard__control--right svg {
+  transform: rotate(0deg);
+}
+
+.marketCard__metaRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #a3a3a3;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.marketCard__rating, .marketCard__hd {
+  border: 1px solid rgba(255,255,255,0.4);
+  padding: 0 4px;
+  border-radius: 2px;
+  font-size: 10px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.marketCard__duration {
+  font-weight: 500;
+}
+
+.marketCard__tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #fff;
+  margin-top: 4px;
+}
+
+.marketCard__tags span {
+  display: inline-block;
+}
+
+.marketCard__tags span:nth-child(even) {
+  color: #666;
+}
+
+.marketCard__title {
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.marketCard__priceInline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  color: #46d369;
+  font-weight: 700;
+  font-size: 14px;
 }
 
 @media (max-width: 768px) {
-  .marketCard {
+  .marketCard-wrapper {
     min-width: 200px;
     height: 120px;
   }
-
-  .marketCard__title {
-    font-size: 0.85rem;
-  }
-
-  .marketCard__prices,
-  .marketCard__stats {
-    font-size: 0.7rem;
+  
+  .marketCard__imageContainer {
+    height: 120px;
   }
 }

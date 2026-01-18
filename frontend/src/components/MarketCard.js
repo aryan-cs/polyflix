@@ -37,7 +37,10 @@ function MarketCard({ market, onSelectMarket }) {
         {isHovered && (
           <div className="marketCard__panel" onClick={handleOpen}>
             <div className="marketCard__content">
-              <div className="marketCard__actions" onClick={(e) => e.stopPropagation()}>
+              <div
+                className="marketCard__actions"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <div className="marketCard__actions-left">
                   <button className="marketCard__control marketCard__control--primary" aria-label="Play">
                     <svg viewBox="0 0 24 24" width="24" height="24" data-icon="PlayMedium" aria-hidden="true" fill="none">
@@ -68,21 +71,24 @@ function MarketCard({ market, onSelectMarket }) {
                 <span className="marketCard__hd">HD</span>
               </div>
 
-            <div className="marketCard__tags">
-              <span>Slick</span>
-              <span> • </span>
-              <span>Raunchy</span>
-              <span> • </span>
-              <span>Dark Comedy</span>
-            </div>
+              <div className="marketCard__tags">
+                <span>Slick</span>
+                <span> • </span>
+                <span>Raunchy</span>
+                <span> • </span>
+                <span>Dark Comedy</span>
+              </div>
 
-            <div className="marketCard__priceInline">
-              <span className="marketCard__priceLabel">YES</span>
-              <span className="marketCard__priceValue">{priceItems?.[0]?.price ?? market?.yesPrice}¢</span>
+              <div className="marketCard__priceInline">
+                <span className="marketCard__priceLabel">YES</span>
+                <span className="marketCard__priceValue">
+                  {priceItems?.[0]?.price ?? market?.yesPrice}¢
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

@@ -234,8 +234,7 @@ function MarketCard({ market, onSelectMarket }) {
               </div>
 
               <div className="marketCard__priceInline">
-                <span className="marketCard__priceLabel">YES</span>
-                <span className="marketCard__priceValue">{priceItems?.[0]?.price ?? market?.yesPrice}¢</span>
+                <span className="marketCard__priceValue">YES {market?.yesPrice || '50'}¢</span>
               </div>
             </div>
           </div>

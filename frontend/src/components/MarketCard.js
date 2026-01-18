@@ -111,10 +111,11 @@ function MarketCard({ market, onSelectMarket }) {
   // Normalize title - API returns "question", mock data uses "title"
   const marketTitle = market.title || market.question || '';
 
-  // Check if market is liked on mount and when market changes
+  // Check if market is in any watchlist on mount and when market changes
   useEffect(() => {
     if (market?.id) {
-      setIsLiked(isMarketLiked(market.id));
+      const watchlistsContainingMarket = getWatchlistsContainingMarket(market.id);
+      setIsLiked(watchlistsContainingMarket.length > 0);
     }
   }, [market?.id]);
 
@@ -122,7 +123,10 @@ function MarketCard({ market, onSelectMarket }) {
   useEffect(() => {
     if (showWatchlistDropdown) {
       setWatchlists(getWatchlists());
-      setMarketWatchlists(getWatchlistsContainingMarket(market.id));
+      const watchlistsContainingMarket = getWatchlistsContainingMarket(market.id);
+      setMarketWatchlists(watchlistsContainingMarket);
+      // Update thumbs up state based on watchlists
+      setIsLiked(watchlistsContainingMarket.length > 0);
     }
   }, [showWatchlistDropdown, market.id]);
 
@@ -142,7 +146,9 @@ function MarketCard({ market, onSelectMarket }) {
   const handleLikeClick = (e) => {
     e.stopPropagation();
     toggleLikedMarket(market);
-    setIsLiked(!isLiked);
+    // Update thumbs up state: green if market is in any watchlist
+    const watchlistsContainingMarket = getWatchlistsContainingMarket(market.id);
+    setIsLiked(watchlistsContainingMarket.length > 0);
   };
 
   const handleAddToListClick = (e) => {
@@ -154,10 +160,16 @@ function MarketCard({ market, onSelectMarket }) {
     const isInWatchlist = marketWatchlists.includes(watchlistId);
     if (isInWatchlist) {
       removeMarketFromWatchlist(watchlistId, market.id);
-      setMarketWatchlists(marketWatchlists.filter(id => id !== watchlistId));
+      const updatedWatchlists = marketWatchlists.filter(id => id !== watchlistId);
+      setMarketWatchlists(updatedWatchlists);
+      // Update thumbs up state: green if market is in any watchlist
+      setIsLiked(updatedWatchlists.length > 0);
     } else {
       addMarketToWatchlist(watchlistId, market);
-      setMarketWatchlists([...marketWatchlists, watchlistId]);
+      const updatedWatchlists = [...marketWatchlists, watchlistId];
+      setMarketWatchlists(updatedWatchlists);
+      // Update thumbs up state: green if market is in any watchlist
+      setIsLiked(true);
     }
   };
 
@@ -301,11 +313,6 @@ function MarketCard({ market, onSelectMarket }) {
                     </svg>
                   </button>
                 </div>
-                <button className="marketCard__control marketCard__control--right" aria-label="More">
-                  <svg viewBox="0 0 24 24" width="24" height="24" data-icon="ChevronDownMedium" aria-hidden="true" fill="none">
-                    <path fill="currentColor" fillRule="evenodd" d="m12 15.586 7.293-7.293 1.414 1.414-8 8a1 1 0 0 1-1.414 0l-8-8 1.414-1.414z" clipRule="evenodd"></path>
-                  </svg>
-                </button>
               </div>
 
               <div className="marketCard__metaRow">

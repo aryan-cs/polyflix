@@ -2,16 +2,44 @@ import React, { useEffect, useMemo, useState } from 'react';
 import MarketRow from '../components/MarketRow';
 import MarketModal from '../components/MarketModal';
 import { marketData } from '../data/mockData';
-import './Sports.css';
+import './Culture.css';
 
 const GROUP_CONFIG = [
-  { key: 'nfl', label: 'NFL', match: ['nfl', 'super bowl', 'gridiron'] },
-  { key: 'nba', label: 'NBA', match: ['nba', 'wnba', 'basketball'] },
-  { key: 'mlb', label: 'MLB', match: ['mlb', 'baseball', 'world series'] },
-  { key: 'soccer', label: 'Soccer', match: ['soccer', 'football', 'fifa'] },
-  { key: 'nhl', label: 'NHL', match: ['nhl', 'hockey', 'stanley cup'] },
-  { key: 'tennis', label: 'Tennis', match: ['tennis', 'wimbledon', 'us open'] },
-  { key: 'golf', label: 'Golf', match: ['golf', 'pga', 'masters'] },
+  {
+    key: 'movies',
+    label: 'Movies',
+    match: ['movie', 'film', 'cinema', 'box office', 'theater'],
+  },
+  {
+    key: 'tv',
+    label: 'TV & Streaming',
+    match: ['tv', 'series', 'show', 'season', 'episode', 'netflix', 'hbo', 'prime'],
+  },
+  {
+    key: 'music',
+    label: 'Music',
+    match: ['music', 'album', 'song', 'tour', 'concert', 'festival', 'artist'],
+  },
+  {
+    key: 'awards',
+    label: 'Awards',
+    match: ['oscar', 'oscars', 'grammy', 'emmy', 'award', 'golden globe'],
+  },
+  {
+    key: 'celebs',
+    label: 'Celebrities',
+    match: ['celebrity', 'actor', 'actress', 'influencer', 'creator', 'rapper'],
+  },
+  {
+    key: 'gaming',
+    label: 'Gaming',
+    match: ['game', 'gaming', 'gta', 'console', 'playstation', 'xbox', 'switch'],
+  },
+  {
+    key: 'entertainment',
+    label: 'Entertainment',
+    match: ['entertainment', 'pop culture', 'popculture', 'trending'],
+  },
 ];
 
 const normalizeText = (value) =>
@@ -29,6 +57,7 @@ const getMarketKeywords = (market) => {
     market?.slug ||
     '';
   const category = market?.category || '';
+  const description = market?.description || '';
   const eventTitle = market?.event?.title || market?.event?.slug || '';
   const tagValues = Array.isArray(market?.tags)
     ? market.tags
@@ -45,9 +74,14 @@ const getMarketKeywords = (market) => {
     : [];
 
   return normalizeText(
-    [title, category, eventTitle, tagValues.join(' '), relatedTagValues.join(' ')].join(
-      ' '
-    )
+    [
+      title,
+      description,
+      category,
+      eventTitle,
+      tagValues.join(' '),
+      relatedTagValues.join(' '),
+    ].join(' ')
   );
 };
 
@@ -72,38 +106,40 @@ const groupMarkets = (markets) => {
   return { grouped, other };
 };
 
-function Sports() {
+function Culture() {
   const [selectedMarket, setSelectedMarket] = useState(null);
-  const [sportsMarkets, setSportsMarkets] = useState(marketData.sports);
+  const [cultureMarkets, setCultureMarkets] = useState(
+    marketData.popCulture || []
+  );
   const { grouped, other } = useMemo(
-    () => groupMarkets(sportsMarkets),
-    [sportsMarkets]
+    () => groupMarkets(cultureMarkets),
+    [cultureMarkets]
   );
 
   useEffect(() => {
-    const fetchSports = async () => {
+    const fetchCulture = async () => {
       try {
         const response = await fetch(
-          'http://localhost:5002/api/polymarket/sports?limit=80&strategy=balanced'
+          'http://localhost:5002/api/polymarket/popculture?limit=200&strategy=balanced'
         );
         const data = await response.json();
         if (Array.isArray(data.markets) && data.markets.length > 0) {
-          setSportsMarkets(data.markets);
+          setCultureMarkets(data.markets);
         }
       } catch (error) {
-        console.error('❌ Error fetching sports markets:', error);
+        console.error('❌ Error fetching culture markets:', error);
       }
     };
 
-    fetchSports();
+    fetchCulture();
   }, []);
 
   return (
-    <div className="sports">
-      <div className="sports__header">
-        <h2>Sports</h2>
+    <div className="culture">
+      <div className="culture__header">
+        <h2>Culture</h2>
       </div>
-      <div className="sports__rows">
+      <div className="culture__rows">
         {GROUP_CONFIG.map((group) =>
           grouped[group.key]?.length ? (
             <MarketRow
@@ -116,7 +152,7 @@ function Sports() {
         )}
         {other.length > 0 && (
           <MarketRow
-            title="More Sports"
+            title="More Culture"
             markets={other}
             onSelectMarket={setSelectedMarket}
           />
@@ -127,5 +163,5 @@ function Sports() {
   );
 }
 
-export default Sports;
+export default Culture;
 

@@ -1,4 +1,4 @@
-.trending {
+.culture {
   padding-top: 100px;
   background-color: #141414;
   min-height: 100vh;
@@ -6,11 +6,11 @@
   padding-right: 20px;
 }
 
-.trending__header {
+.culture__header {
   margin-bottom: 30px;
 }
 
-.trending__header h2 {
+.culture__header h2 {
   color: white;
   font-size: 2.5rem;
   font-weight: bold;

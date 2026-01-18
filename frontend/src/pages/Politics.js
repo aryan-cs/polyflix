@@ -104,7 +104,7 @@ function Politics() {
     const fetchPolitics = async () => {
       try {
         const response = await fetch(
-          'http://localhost:5002/api/polymarket/politics?limit=20'
+          'http://localhost:5002/api/polymarket/politics?limit=80&strategy=balanced'
         );
         const data = await response.json();
         if (Array.isArray(data.markets) && data.markets.length > 0) {

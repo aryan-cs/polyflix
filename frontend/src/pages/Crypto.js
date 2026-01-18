@@ -100,7 +100,7 @@ function Crypto() {
     const fetchCrypto = async () => {
       try {
         const response = await fetch(
-          'http://localhost:5002/api/polymarket/crypto?limit=20'
+          'http://localhost:5002/api/polymarket/crypto?limit=80&strategy=balanced'
         );
         const data = await response.json();
         if (Array.isArray(data.markets) && data.markets.length > 0) {

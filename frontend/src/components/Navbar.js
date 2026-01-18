@@ -79,7 +79,6 @@ function Navbar() {
             <span onClick={() => navigate('/crypto')}>Crypto</span>
             <span onClick={() => navigate('/sports')}>Sports</span>
             <span onClick={() => navigate('/watchlists')}>My Watchlists</span>
-            <span onClick={() => navigate('/watchparty')}>Watch Party</span>
           </div>
         </div>
         

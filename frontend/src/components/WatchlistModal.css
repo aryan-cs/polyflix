@@ -1,0 +1,415 @@
+.watchlistModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.25s ease;
+}
+
+.watchlistModal--closing {
+  animation: fadeOut 0.25s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.watchlistModal__dialog {
+  background-color: #181818;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 85vh;
+  overflow: hidden;
+  position: relative;
+  animation: slideUp 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.watchlistModal--closing .watchlistModal__dialog {
+  animation: slideDown 0.25s ease forwards;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideDown {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(50px); opacity: 0; }
+}
+
+.watchlistModal__close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 36px;
+  height: 36px;
+  background-color: #181818;
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  transition: background-color 0.2s ease;
+}
+
+.watchlistModal__close:hover {
+  background-color: #333;
+}
+
+.watchlistModal__header {
+  padding: 25px 30px;
+  border-bottom: 1px solid #333;
+}
+
+.watchlistModal__titleRow {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.watchlistModal__title {
+  color: white;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.watchlistModal__count {
+  color: #808080;
+  font-size: 1rem;
+}
+
+.watchlistModal__actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  margin-right: 50px;
+}
+
+.watchlistModal__iconBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 8px 10px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  opacity: 0.7;
+}
+
+.watchlistModal__iconBtn:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.watchlistModal__deleteBtn:hover {
+  background-color: rgba(229, 9, 20, 0.3);
+}
+
+.watchlistModal__editContainer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.watchlistModal__editInput {
+  background-color: #333;
+  border: 1px solid #555;
+  color: white;
+  padding: 10px 15px;
+  font-size: 1.4rem;
+  border-radius: 4px;
+  width: 300px;
+}
+
+.watchlistModal__editInput:focus {
+  outline: none;
+  border-color: #e50914;
+}
+
+.watchlistModal__saveBtn {
+  color: #4caf50;
+}
+
+.watchlistModal__cancelBtn {
+  color: #f44336;
+}
+
+.watchlistModal__recsBtn {
+  background-color: #6366f1;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 15px;
+  transition: background-color 0.2s ease;
+}
+
+.watchlistModal__recsBtn:hover {
+  background-color: #4f46e5;
+}
+
+.watchlistModal__loading {
+  color: #6366f1;
+  font-size: 0.95rem;
+  display: block;
+  margin-top: 15px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.watchlistModal__deleteConfirm {
+  background-color: rgba(229, 9, 20, 0.15);
+  border: 1px solid rgba(229, 9, 20, 0.3);
+  padding: 15px 20px;
+  margin: 0 30px;
+  border-radius: 6px;
+}
+
+.watchlistModal__deleteConfirm p {
+  color: white;
+  margin: 0 0 12px 0;
+}
+
+.watchlistModal__deleteButtons {
+  display: flex;
+  gap: 10px;
+}
+
+.watchlistModal__deleteConfirmBtn {
+  background-color: #e50914;
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.watchlistModal__deleteConfirmBtn:hover {
+  background-color: #f40612;
+}
+
+.watchlistModal__deleteCancelBtn {
+  background-color: #333;
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.watchlistModal__deleteCancelBtn:hover {
+  background-color: #444;
+}
+
+.watchlistModal__body {
+  padding: 20px 30px 30px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.watchlistModal__empty {
+  text-align: center;
+  color: #666;
+  padding: 40px 20px;
+}
+
+.watchlistModal__empty p {
+  margin: 5px 0;
+}
+
+.watchlistModal__marketList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.watchlistModal__marketItem {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px 15px;
+  background-color: #222;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.watchlistModal__marketItem:hover {
+  background-color: #2a2a2a;
+  transform: translateX(5px);
+}
+
+.watchlistModal__marketImage {
+  width: 80px;
+  height: 45px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.watchlistModal__marketInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.watchlistModal__marketTitle {
+  display: block;
+  color: white;
+  font-size: 1rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.watchlistModal__marketMeta {
+  display: block;
+  color: #808080;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+.watchlistModal__removeBtn {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.watchlistModal__removeBtn:hover {
+  color: #e50914;
+  background-color: rgba(229, 9, 20, 0.2);
+}
+
+/* Recommendations Section */
+.watchlistModal__recommendations {
+  margin-top: 25px;
+  padding: 20px;
+  background-color: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 8px;
+}
+
+.watchlistModal__recsTitle {
+  color: #a5b4fc;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 15px 0;
+}
+
+.watchlistModal__recsList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.watchlistModal__recCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgba(30, 30, 30, 0.8);
+  padding: 12px 16px;
+  border-radius: 6px;
+  border: 1px solid #333;
+  transition: border-color 0.2s ease;
+}
+
+.watchlistModal__recCard:hover {
+  border-color: #6366f1;
+}
+
+.watchlistModal__recInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  margin-right: 15px;
+  min-width: 0;
+}
+
+.watchlistModal__recTitle {
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.watchlistModal__recScore {
+  color: #808080;
+  font-size: 0.8rem;
+}
+
+.watchlistModal__recActions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.watchlistModal__recBtn {
+  padding: 6px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.watchlistModal__recBtn--like {
+  background-color: #22c55e;
+  color: white;
+}
+
+.watchlistModal__recBtn--like:hover {
+  background-color: #16a34a;
+}
+
+.watchlistModal__recBtn--dislike {
+  background-color: #333;
+  color: #ccc;
+  border: 1px solid #555;
+}
+
+.watchlistModal__recBtn--dislike:hover {
+  background-color: #ef4444;
+  color: white;
+  border-color: #ef4444;
+}

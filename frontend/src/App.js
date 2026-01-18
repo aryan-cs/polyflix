@@ -10,6 +10,7 @@ import Politics from './pages/Politics';
 import Crypto from './pages/Crypto';
 import Sports from './pages/Sports';
 import ForYou from './pages/ForYou';
+import SearchResults from './pages/SearchResults';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
           <Route path="/sports" element={<Sports />} />
           <Route path="/watchlists" element={<MyWatchlists />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/search" element={<SearchResults />} />
         </Routes>
       </div>
     </Router>

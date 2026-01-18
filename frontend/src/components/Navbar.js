@@ -90,6 +90,12 @@ function Navbar() {
               className={`navbar__search-input ${searchOpen ? 'navbar__search-input--open' : ''}`}
               type="text"
               placeholder="Topics, tags, markets"
+              onKeyDown={e => {
+                if (e.key === 'Enter' && e.target.value.trim()) {
+                  window.location.href = `/search?q=${encodeURIComponent(e.target.value.trim())}`;
+                  setSearchOpen(false);
+                }
+              }}
               onBlur={(e) => {
                 if (!e.relatedTarget || !e.relatedTarget.closest('.navbar__search')) {
                   setSearchOpen(false);

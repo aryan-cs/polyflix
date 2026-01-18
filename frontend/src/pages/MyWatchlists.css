@@ -51,101 +51,23 @@
     margin: 5px 0;
 }
 
-.myWatchlists__rowContainer {
-    margin-bottom: 30px;
+.myWatchlists__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    padding: 20px;
 }
 
-.myWatchlists__rowHeader {
-    display: flex;
-    align-items: center;
-    margin-bottom: 10px;
-    margin-left: 10px;
+@media (min-width: 768px) {
+    .myWatchlists__grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
 }
 
-.myWatchlists__titleContainer {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.myWatchlists__rowTitle {
-    color: white;
-    font-size: 1.4rem;
-    font-weight: 600;
-    margin: 0;
-}
-
-.myWatchlists__marketCount {
-    color: #808080;
-    font-size: 0.9rem;
-    font-weight: 400;
-}
-
-.myWatchlists__iconBtn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1.1rem;
-    padding: 5px 8px;
-    border-radius: 4px;
-    transition: background-color 0.2s ease;
-    opacity: 0.6;
-}
-
-.myWatchlists__iconBtn:hover {
-    opacity: 1;
-    background-color: rgba(255, 255, 255, 0.1);
-}
-
-.myWatchlists__editBtn {
-    color: #aaa;
-}
-
-.myWatchlists__deleteBtn {
-    color: #aaa;
-}
-
-.myWatchlists__deleteBtn:hover {
-    background-color: rgba(229, 9, 20, 0.3);
-}
-
-.myWatchlists__editContainer {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.myWatchlists__editInput {
-    background-color: #333;
-    border: 1px solid #555;
-    color: white;
-    padding: 8px 12px;
-    font-size: 1.2rem;
-    border-radius: 4px;
-    width: 300px;
-}
-
-.myWatchlists__editInput:focus {
-    outline: none;
-    border-color: #e50914;
-}
-
-.myWatchlists__saveBtn {
-    color: #4caf50;
-}
-
-.myWatchlists__cancelBtn {
-    color: #f44336;
-}
-
-.myWatchlists__emptyRow {
-    color: #666;
-    font-size: 1rem;
-    padding: 40px 20px;
-    text-align: center;
-    background-color: rgba(255, 255, 255, 0.05);
-    border-radius: 4px;
-    margin: 0 10px;
+@media (min-width: 1200px) {
+    .myWatchlists__grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
 }
 
 /* Modal styles */

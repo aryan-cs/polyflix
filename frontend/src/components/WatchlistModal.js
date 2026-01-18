@@ -82,8 +82,8 @@ function WatchlistModal({
   };
 
   const fetchRecommendations = async () => {
-    if (!watchlist || !watchlist.markets || watchlist.markets.length < 5) {
-      alert('Watchlist needs at least 5 markets to get recommendations.');
+    if (!watchlist || !watchlist.markets || watchlist.markets.length < 3) {
+      alert('Watchlist needs at least 3 markets to get recommendations.');
       return;
     }
 
@@ -131,8 +131,8 @@ function WatchlistModal({
           };
         });
 
-      if (watchlistData.length < 5) {
-        alert('Watchlist needs at least 5 valid markets to get recommendations.');
+      if (watchlistData.length < 3) {
+        alert('Watchlist needs at least 3 valid markets to get recommendations.');
         setIsLoadingRecs(false);
         return;
       }
@@ -261,7 +261,7 @@ function WatchlistModal({
             </div>
           )}
 
-          {watchlist.markets.length >= 5 && recommendations.length === 0 && !isLoadingRecs && (
+          {watchlist.markets.length >= 3 && recommendations.length === 0 && !isLoadingRecs && (
             <button
               className="watchlistModal__recsBtn"
               onClick={fetchRecommendations}

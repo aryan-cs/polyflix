@@ -107,7 +107,15 @@ STOP_WORDS = {
     'same', 'so', 'than', 'too', 'very', 'just', 'and', 'but', 'if', 'or',
     'because', 'until', 'while', 'this', 'that', 'these', 'those', 'what',
     'which', 'who', 'whom', 'win', 'price', 'market', 'prediction', 'will',
-    'yes', 'no', 'over', 'under', 'reach', 'hit', 'end', 'year', 'week'
+    'yes', 'no', 'over', 'under', 'reach', 'hit', 'end', 'year', 'week',
+    # Months - explicitly exclude to prevent date-based clustering
+    'january', 'february', 'march', 'april', 'may', 'june',
+    'july', 'august', 'september', 'october', 'november', 'december',
+    'jan', 'feb', 'mar', 'apr', 'jun', 'jul', 'aug', 'sep', 'sept', 'oct', 'nov', 'dec',
+    # Time-related words that don't add semantic meaning
+    'today', 'tomorrow', 'yesterday', 'week', 'month', 'day', 'days', 'weeks', 'months',
+    'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday',
+    'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'
 }
 
 
@@ -270,9 +278,8 @@ class SearchRecommender:
             List of keywords (bigrams preferred, fallback to unigrams).
         """
         generic_words = {
-            'january', 'february', 'march', 'april', 'may', 'june',
-            'july', 'august', 'september', 'october', 'november', 'december',
             'season', 'game', 'before', 'after', 'end', 'start',
+            'dip', 'reach', 'hit', 'above', 'below', 'between', 'price'
         }
 
         # Clean and tokenize
@@ -295,12 +302,15 @@ class SearchRecommender:
 
         keywords = []
 
-        # Extract bigrams first (consecutive pairs)
+        # Extract bigrams first (consecutive pairs), but skip if either word is a month/time word
         for i in range(len(meaningful_words) - 1):
             if len(keywords) >= top_n:
                 break
-            bigram = f"{meaningful_words[i]} {meaningful_words[i + 1]}"
-            keywords.append(bigram)
+            word1, word2 = meaningful_words[i], meaningful_words[i + 1]
+            # Skip bigrams that contain time-related words
+            if word1 not in STOP_WORDS and word2 not in STOP_WORDS:
+                bigram = f"{word1} {word2}"
+                keywords.append(bigram)
 
         # Fill remaining slots with single words if needed
         for word in meaningful_words:
@@ -506,6 +516,33 @@ class SearchRecommender:
             "matching_negative": list(matching_negative) if matching_negative else []
         }
 
+    def _get_topic_signature(self, title: str) -> str:
+        """
+        Extract a topic signature from a market title to group similar markets.
+        Removes dates, prices, and time-specific information.
+        
+        Args:
+            title: Market title
+            
+        Returns:
+            A simplified topic signature string
+        """
+        # Remove common price/date patterns
+        import re
+        # Remove dollar amounts like $85,000, $100k, etc.
+        title = re.sub(r'\$[\d,]+[km]?\b', '', title, flags=re.IGNORECASE)
+        # Remove date ranges like "January 12-18", "by 2025", etc.
+        title = re.sub(r'\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+\d+[-\d]*', '', title, flags=re.IGNORECASE)
+        title = re.sub(r'\b\d{4}\b', '', title)  # Remove years
+        title = re.sub(r'\b\d+[-\d]+\b', '', title)  # Remove number ranges
+        
+        # Extract key entities (capitalized words, common entities)
+        words = title.lower().translate(str.maketrans('', '', string.punctuation)).split()
+        key_words = [w for w in words if w not in STOP_WORDS and len(w) > 3 and not w.isdigit()]
+        
+        # Return first 2-3 key words as signature
+        return ' '.join(sorted(set(key_words))[:3])
+    
     def _select_diverse_results(
         self,
         scored_markets: List[Dict[str, Any]],
@@ -513,10 +550,11 @@ class SearchRecommender:
         top_n: int
     ) -> List[Dict[str, Any]]:
         """
-        Select diverse results ensuring quota per source keyword.
+        Select diverse results ensuring quota per source keyword and limiting similar topics.
 
         Distributes result slots across keywords to ensure each topic
         in the watchlist gets representation in the final recommendations.
+        Also limits how many markets can come from the same topic cluster.
 
         Args:
             scored_markets: List of scored market dictionaries.
@@ -551,7 +589,11 @@ class SearchRecommender:
             print(f"{'='*60}")
             print(f"Keywords: {num_keywords}, Quota per keyword: {quota_per_keyword}, Extra slots: {extra_slots}")
 
-        # First pass: fill quota from each keyword
+        # Track topic signatures to limit similar markets
+        topic_counts = {}
+        max_per_topic = max(2, top_n // 4)  # Max 2-3 markets per topic cluster
+
+        # First pass: fill quota from each keyword, but limit similar topics
         selected = []
         selected_ids = set()
 
@@ -564,25 +606,40 @@ class SearchRecommender:
                 if added >= quota:
                     break
                 if market["id"] not in selected_ids:
-                    selected.append(market)
-                    selected_ids.add(market["id"])
-                    added += 1
+                    # Check topic diversity
+                    topic_sig = self._get_topic_signature(market["title"])
+                    topic_count = topic_counts.get(topic_sig, 0)
+                    
+                    if topic_count < max_per_topic:
+                        selected.append(market)
+                        selected_ids.add(market["id"])
+                        topic_counts[topic_sig] = topic_count + 1
+                        added += 1
 
             if self.debug:
                 print(f"  '{kw}': added {added}/{quota} (bucket size: {len(bucket)})")
 
-        # Second pass: if we still have slots, fill with highest scoring remaining
+        # Second pass: if we still have slots, fill with highest scoring remaining, respecting topic limits
         if len(selected) < top_n:
             remaining = [m for m in scored_markets if m["id"] not in selected_ids]
             remaining.sort(key=lambda x: x["score"], reverse=True)
             for market in remaining:
                 if len(selected) >= top_n:
                     break
-                selected.append(market)
-                selected_ids.add(market["id"])
+                # Check topic diversity
+                topic_sig = self._get_topic_signature(market["title"])
+                topic_count = topic_counts.get(topic_sig, 0)
+                
+                if topic_count < max_per_topic:
+                    selected.append(market)
+                    selected_ids.add(market["id"])
+                    topic_counts[topic_sig] = topic_count + 1
 
         # Sort final selection by score
         selected.sort(key=lambda x: x["score"], reverse=True)
+
+        if self.debug:
+            print(f"Topic distribution: {dict(sorted(topic_counts.items(), key=lambda x: x[1], reverse=True)[:5])}")
 
         return selected[:top_n]
 

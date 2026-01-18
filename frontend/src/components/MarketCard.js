@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './MarketCard.css';
-import realImage from './ticket4.svg';
+import realImage from './images3.svg';
 
 // Extract keywords from market title
 function extractKeywords(title) {
@@ -21,6 +21,16 @@ function extractKeywords(title) {
   }
   
   return keywords.length >= 2 ? keywords : ['Market', 'Prediction'];
+}
+
+// Normalize a price to display in cents
+function formatCents(price) {
+  const n = Number(price);
+  if (!Number.isFinite(n)) return null;
+  // If price looks like a probability (0-1), convert to cents
+  if (n > 0 && n <= 1) return Math.round(n * 100);
+  // Otherwise assume it's already in cents
+  return Math.round(n);
 }
 
 // Calculate time until resolution
@@ -234,7 +244,11 @@ function MarketCard({ market, onSelectMarket }) {
               </div>
 
               <div className="marketCard__priceInline">
-                <span className="marketCard__priceValue">YES {market?.yesPrice || '50'}¢</span>
+                <span className="marketCard__priceValue">
+                  {Number.isFinite(Number(market?.yesPrice))
+                    ? `YES ${formatCents(market.yesPrice)}¢`
+                    : ''}
+                </span>
               </div>
             </div>
           </div>

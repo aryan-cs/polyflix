@@ -45,33 +45,15 @@ function App() {
 
         const enrich = async (markets) => {
           const enriched = await Promise.all((markets || []).map(async (m) => {
-            // Map backend fields to frontend expectations
             const title = m.title || m.question || "Untitled Market";
-            const existingImage = m.image || m.icon;
-            
-            let dynamicImage = existingImage;
-            
-            // Get dynamic image if no existing image or for better variety
-            if (!existingImage) {
-              try {
-                const imageResponse = await fetch(`http://localhost:5002/api/images/search?market=${encodeURIComponent(JSON.stringify({ ...m, title }))}`);
-                if (imageResponse.ok) {
-                  const imageData = await imageResponse.json();
-                  dynamicImage = imageData.imageUrl;
-                }
-              } catch (error) {
-                console.warn('Image search failed for market:', title);
-                // Keep existing image or use default
-              }
-            }
-            
+            // Always derive image via mapper for consistency
+            const mappedImage = getMarketImage({ ...m, title });
             return { 
-              ...m, 
+              ...m,
               title,
-              image: dynamicImage
+              image: mappedImage
             };
           }));
-          
           return enriched;
         };
 

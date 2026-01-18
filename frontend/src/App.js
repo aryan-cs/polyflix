@@ -9,6 +9,7 @@ import Culture from './pages/Culture';
 import Politics from './pages/Politics';
 import Crypto from './pages/Crypto';
 import Sports from './pages/Sports';
+import ForYou from './pages/ForYou';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Navbar />
         <Routes>
           <Route path="/" element={<HomeScreen />} />
+          <Route path="/foryou" element={<ForYou />} />
           <Route path="/culture" element={<Culture />} />
           <Route path="/politics" element={<Politics />} />
           <Route path="/crypto" element={<Crypto />} />

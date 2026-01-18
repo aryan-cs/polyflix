@@ -124,7 +124,11 @@ function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatc
   }, [market]);
 
   // Generate AI-powered suggested questions when market loads
+  // DISABLED: Set to false to disable AI-generated suggested questions
+  const ENABLE_SUGGESTED_QUESTIONS = false;
+  
   useEffect(() => {
+    if (!ENABLE_SUGGESTED_QUESTIONS) return; // Feature disabled
     if (!market || aiMessages.length > 0) return;
 
     const generateQuestions = async () => {
@@ -808,7 +812,8 @@ Only return the JSON array, nothing else.`
                       )}
                     </div>
 
-                    {aiMessages.length === 0 && !aiLoading && (
+                    {/* DISABLED: AI-generated suggested questions feature */}
+                    {false && aiMessages.length === 0 && !aiLoading && (
                        <div className="marketModal__ai-suggestions">
                         <p className="marketModal__ai-suggestions-title">Try asking:</p>
                         {suggestedQuestions.length > 0 ? (

@@ -301,6 +301,111 @@ router.get('/search', async (req, res) => {
   }
 });
 
+// Market details endpoint - fetch full market with token IDs
+// IMPORTANT: This must come BEFORE the category route pattern
+router.get('/market/:marketId', async (req, res) => {
+  const { marketId } = req.params;
+  console.log(`\n📊 [MARKET DETAILS] Fetching market ${marketId}`);
+  
+  try {
+    const response = await fetch(
+      `${GAMMA_API_BASE}/markets/${marketId}`,
+      { headers: DEFAULT_HEADERS }
+    );
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    const market = await response.json();
+    console.log(`✅ Got market details for ${marketId}`);
+    
+    res.json(market);
+  } catch (error) {
+    console.error(`❌ MARKET DETAILS ERROR:`, error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Price history endpoint - fetch price history from CLOB API
+// IMPORTANT: This must come BEFORE the category route pattern
+router.get('/prices-history/:tokenId', async (req, res) => {
+  const { tokenId } = req.params;
+  console.log(`\n📈 [PRICE HISTORY] Fetching history for token ${tokenId}`);
+  
+  try {
+    const CLOB_API_BASE = 'https://clob.polymarket.com';
+    const url = `${CLOB_API_BASE}/prices-history?market=${tokenId}&interval=max`;
+    console.log(`📈 [PRICE HISTORY] Request URL: ${url}`);
+    
+    const response = await fetch(url, { 
+      headers: {
+        ...DEFAULT_HEADERS,
+        'Accept': 'application/json'
+      }
+    });
+    
+    console.log(`📈 [PRICE HISTORY] Response status: ${response.status}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`❌ [PRICE HISTORY] HTTP ${response.status}: ${errorText}`);
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
+    }
+    
+    const data = await response.json();
+    console.log(`📈 [PRICE HISTORY] Response data type:`, typeof data, Array.isArray(data) ? 'array' : 'object');
+    console.log(`📈 [PRICE HISTORY] Response keys:`, data ? Object.keys(data) : 'null');
+    
+    // Handle different response formats
+    // Some APIs return { history: [...] } or just [...]
+    let priceHistory = [];
+    if (Array.isArray(data)) {
+      priceHistory = data;
+    } else if (data && Array.isArray(data.history)) {
+      priceHistory = data.history;
+    } else if (data && Array.isArray(data.data)) {
+      priceHistory = data.data;
+    } else {
+      console.warn(`⚠️ [PRICE HISTORY] Unexpected response format:`, data);
+      priceHistory = [];
+    }
+    
+    console.log(`📈 [PRICE HISTORY] Extracted ${priceHistory.length} price points`);
+    
+    // Filter to last month
+    // CLOB API returns timestamps in Unix seconds, not milliseconds
+    const oneMonthAgoSeconds = Math.floor(Date.now() / 1000) - (30 * 24 * 60 * 60);
+    const filteredHistory = priceHistory.filter(item => {
+      if (!item || typeof item.t === 'undefined') return false;
+      const timestamp = typeof item.t === 'string' ? parseInt(item.t) : item.t;
+      return timestamp >= oneMonthAgoSeconds;
+    });
+    
+    // Downsample to every 3 hours (10800 seconds) to reduce data points
+    const THREE_HOURS = 3 * 60 * 60; // 10800 seconds
+    const downsampled = [];
+    let lastTimestamp = 0;
+    
+    filteredHistory.forEach(item => {
+      const timestamp = typeof item.t === 'string' ? parseInt(item.t) : item.t;
+      // Include first point, then every point that's at least 3 hours after the last included point
+      if (downsampled.length === 0 || timestamp - lastTimestamp >= THREE_HOURS) {
+        downsampled.push(item);
+        lastTimestamp = timestamp;
+      }
+    });
+    
+    console.log(`✅ [PRICE HISTORY] Got ${downsampled.length} price points (downsampled from ${filteredHistory.length} filtered from ${priceHistory.length})`);
+    
+    res.json(downsampled);
+  } catch (error) {
+    console.error(`❌ [PRICE HISTORY] ERROR:`, error.message);
+    console.error(`❌ [PRICE HISTORY] Stack:`, error.stack);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Trending route
 router.get('/trending', async (req, res) => {
   console.log(`\n📈 [TRENDING]`);

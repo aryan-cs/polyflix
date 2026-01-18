@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import './WatchlistModal.css';
+import PriceHistoryGraph from './PriceHistoryGraph';
 
 function WatchlistModal({
   watchlist,
@@ -18,6 +19,8 @@ function WatchlistModal({
   const [recommendations, setRecommendations] = useState([]);
   const [isLoadingRecs, setIsLoadingRecs] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [graphMarkets, setGraphMarkets] = useState([]);
+  const [isLoadingGraph, setIsLoadingGraph] = useState(false);
 
   const closeTimerRef = useRef(null);
   const onCloseRef = useRef(onClose);
@@ -33,12 +36,158 @@ function WatchlistModal({
     const isNewWatchlist = watchlist?.id !== watchlistIdRef.current;
     if (isNewWatchlist) {
       setRecommendations([]);
+      setGraphMarkets([]);
       watchlistIdRef.current = watchlist?.id;
     }
     
     setEditName(watchlist?.name || '');
     setIsEditing(false);
     setShowDeleteConfirm(false);
+  }, [watchlist]);
+
+  // Fetch price history for top markets
+  useEffect(() => {
+    const fetchPriceHistory = async () => {
+      if (!watchlist || !watchlist.markets || watchlist.markets.length === 0) {
+        setGraphMarkets([]);
+        return;
+      }
+
+      setIsLoadingGraph(true);
+      console.log('📊 [GRAPH] Starting to fetch price history for watchlist:', watchlist.name);
+
+      try {
+        // Sort markets by volume and take top 3 (reduced for performance)
+        const sortedMarkets = [...watchlist.markets]
+          .filter(m => m && m.id)
+          .sort((a, b) => {
+            const volA = a.volumeNum || parseFloat(a.volume) || 0;
+            const volB = b.volumeNum || parseFloat(b.volume) || 0;
+            return volB - volA;
+          })
+          .slice(0, 3);
+
+        console.log('📊 [GRAPH] Top markets by volume:', sortedMarkets.map(m => ({ id: m.id, title: m.title || m.question, volume: m.volumeNum || m.volume })));
+
+        if (sortedMarkets.length === 0) {
+          console.log('📊 [GRAPH] No markets with IDs found');
+          setGraphMarkets([]);
+          setIsLoadingGraph(false);
+          return;
+        }
+
+        // Fetch market details and price history for each market
+        const marketsWithHistory = await Promise.all(
+          sortedMarkets.map(async (market) => {
+            try {
+              console.log(`📊 [GRAPH] Fetching details for market ${market.id}: ${market.title || market.question}`);
+              
+              // Fetch full market details to get token IDs
+              const marketDetailsResponse = await fetch(
+                `http://localhost:5002/api/polymarket/market/${market.id}`
+              );
+
+              if (!marketDetailsResponse.ok) {
+                const errorText = await marketDetailsResponse.text();
+                console.error(`❌ [GRAPH] Failed to fetch market details for ${market.id}:`, marketDetailsResponse.status, errorText);
+                return null;
+              }
+
+              const marketDetails = await marketDetailsResponse.json();
+              console.log(`✅ [GRAPH] Got market details for ${market.id}:`, {
+                hasOutcomes: !!marketDetails.outcomes,
+                hasClobTokenIds: !!marketDetails.clobTokenIds,
+                outcomes: marketDetails.outcomes,
+                outcomesType: typeof marketDetails.outcomes,
+                clobTokenIds: marketDetails.clobTokenIds,
+                clobTokenIdsType: typeof marketDetails.clobTokenIds
+              });
+
+              // Parse outcomes - handle both array and JSON string formats
+              let outcomes = marketDetails.outcomes;
+              if (typeof outcomes === 'string') {
+                try {
+                  outcomes = JSON.parse(outcomes);
+                } catch (e) {
+                  console.error(`❌ [GRAPH] Failed to parse outcomes string for market ${market.id}:`, e);
+                  outcomes = [];
+                }
+              }
+              if (!Array.isArray(outcomes)) {
+                console.error(`❌ [GRAPH] Outcomes is not an array for market ${market.id}:`, outcomes);
+                outcomes = [];
+              }
+
+              // Parse clobTokenIds - handle both array and JSON string formats
+              let clobTokenIds = marketDetails.clobTokenIds;
+              if (typeof clobTokenIds === 'string') {
+                try {
+                  clobTokenIds = JSON.parse(clobTokenIds);
+                } catch (e) {
+                  console.error(`❌ [GRAPH] Failed to parse clobTokenIds string for market ${market.id}:`, e);
+                  clobTokenIds = [];
+                }
+              }
+              if (!Array.isArray(clobTokenIds)) {
+                console.error(`❌ [GRAPH] clobTokenIds is not an array for market ${market.id}:`, clobTokenIds);
+                clobTokenIds = [];
+              }
+
+              // Find "Yes" token ID
+              const yesIndex = outcomes.findIndex(
+                outcome => outcome && typeof outcome === 'string' && outcome.toLowerCase() === 'yes'
+              );
+
+              if (yesIndex === -1 || !clobTokenIds[yesIndex]) {
+                console.error(`❌ [GRAPH] No "Yes" token found for market ${market.id}. Outcomes:`, outcomes, 'Token IDs:', clobTokenIds);
+                return null;
+              }
+
+              const yesTokenId = clobTokenIds[yesIndex];
+              console.log(`📊 [GRAPH] Found Yes token ID for ${market.id}: ${yesTokenId}`);
+
+              // Fetch price history
+              const priceHistoryResponse = await fetch(
+                `http://localhost:5002/api/polymarket/prices-history/${yesTokenId}`
+              );
+
+              if (!priceHistoryResponse.ok) {
+                const errorText = await priceHistoryResponse.text();
+                console.error(`❌ [GRAPH] Failed to fetch price history for token ${yesTokenId}:`, priceHistoryResponse.status, errorText);
+                return null;
+              }
+
+              const priceHistory = await priceHistoryResponse.json();
+              console.log(`✅ [GRAPH] Got price history for ${market.id}:`, {
+                count: priceHistory?.length || 0,
+                isArray: Array.isArray(priceHistory),
+                sample: priceHistory?.slice(0, 3) || 'none'
+              });
+
+              return {
+                ...market,
+                priceHistory: priceHistory || []
+              };
+            } catch (error) {
+              console.error(`❌ [GRAPH] Error fetching data for market ${market.id}:`, error);
+              return null;
+            }
+          })
+        );
+
+        // Filter out null results
+        const validMarkets = marketsWithHistory.filter(m => m !== null);
+        console.log(`📊 [GRAPH] Successfully fetched data for ${validMarkets.length}/${sortedMarkets.length} markets`);
+        setGraphMarkets(validMarkets);
+      } catch (error) {
+        console.error('❌ [GRAPH] Error fetching price history:', error);
+        setGraphMarkets([]);
+      } finally {
+        setIsLoadingGraph(false);
+      }
+    };
+
+    fetchPriceHistory();
   }, [watchlist]);
 
   const handleClose = useCallback(() => {
@@ -301,34 +450,43 @@ function WatchlistModal({
               <p>Browse markets and add them here!</p>
             </div>
           ) : (
-            <div className="watchlistModal__marketList">
-              {watchlist.markets.map((market) => (
-                <div
-                  key={market.id}
-                  className="watchlistModal__marketItem"
-                  onClick={() => onSelectMarket(market)}
-                >
-                  <img
-                    className="watchlistModal__marketImage"
-                    src={market.image}
-                    alt={market.title}
-                  />
-                  <div className="watchlistModal__marketInfo">
-                    <span className="watchlistModal__marketTitle">{market.title || market.question || 'Untitled Market'}</span>
-                  </div>
-                  <button
-                    className="watchlistModal__removeBtn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRemoveMarket(watchlist.id, market.id);
-                    }}
-                    title="Remove from watchlist"
-                  >
-                    ✕
-                  </button>
+            <>
+              {watchlist.markets.length > 0 && (
+                <div className="watchlistModal__graphSection">
+                  <PriceHistoryGraph markets={graphMarkets} loading={isLoadingGraph} />
                 </div>
-              ))}
-            </div>
+              )}
+              <div className="watchlistModal__marketsSection">
+                <div className="watchlistModal__marketList">
+                  {watchlist.markets.map((market) => (
+                    <div
+                      key={market.id}
+                      className="watchlistModal__marketItem"
+                      onClick={() => onSelectMarket(market)}
+                    >
+                      <img
+                        className="watchlistModal__marketImage"
+                        src={market.image}
+                        alt={market.title}
+                      />
+                      <div className="watchlistModal__marketInfo">
+                        <span className="watchlistModal__marketTitle">{market.title || market.question || 'Untitled Market'}</span>
+                      </div>
+                      <button
+                        className="watchlistModal__removeBtn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemoveMarket(watchlist.id, market.id);
+                        }}
+                        title="Remove from watchlist"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
           )}
 
           {recommendations.length > 0 && (

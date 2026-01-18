@@ -1,0 +1,19 @@
+.trending {
+  padding-top: 100px;
+  background-color: #141414;
+  min-height: 100vh;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.trending__header {
+  margin-bottom: 30px;
+}
+
+.trending__header h2 {
+  color: white;
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-left: 10px;
+}
+

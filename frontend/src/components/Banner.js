@@ -3,7 +3,7 @@ import './Banner.css';
 import TradeNowButton from './TradeNowButton';
 import MoreInfoButton from './MoreInfoButton';
 
-function Banner({ market }) {
+function Banner({ market, onMoreInfo }) {
   const truncate = (str, n) => {
     return str?.length > n ? str.substr(0, n - 1) + '...' : str;
   };
@@ -26,7 +26,7 @@ function Banner({ market }) {
         
         <div className="banner__buttons">
           <TradeNowButton />
-          <MoreInfoButton />
+          <MoreInfoButton onClick={onMoreInfo} />
         </div>
       </div>
       <div className="banner--fadeBottom" />

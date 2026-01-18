@@ -3,6 +3,7 @@ import '../App.css';
 import Navbar from '../components/Navbar';
 import Banner from '../components/Banner';
 import MarketRow from '../components/MarketRow';
+import MarketModal from '../components/MarketModal';
 import { marketData } from '../data/mockData';
 
 function App() {

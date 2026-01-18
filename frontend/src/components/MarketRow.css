@@ -1,14 +1,15 @@
 .row {
-  margin-left: 20px;
+  margin-left: 40px;
   margin-bottom: 40px;
   position: relative;
 }
 
 .row__title {
-  font-size: 1.4rem;
+  z-index: 200;
+  font-size: 1.6rem;
   font-weight: 700;
-  margin-bottom: 10px;
-  color: #e5e5e5;
+  margin-bottom: -5px;
+  color: #ffffff;
   padding-left: 30px;
 }
 

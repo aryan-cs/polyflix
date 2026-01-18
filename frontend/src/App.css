@@ -4,7 +4,7 @@
 }
 
 .app__rows {
-  margin-top: -150px;
+  margin-top: -10rem;
   position: relative;
   z-index: 10;
   padding-bottom: 50px;

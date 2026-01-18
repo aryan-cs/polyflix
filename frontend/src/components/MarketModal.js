@@ -13,11 +13,24 @@ function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatc
   const [showWatchlistDropdown, setShowWatchlistDropdown] = useState(false);
   const [checkedWatchlists, setCheckedWatchlists] = useState(new Set());
   const [watchlists, setWatchlists] = useState([]);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState('');
+  const [username, setUsername] = useState(() => {
+    // Use sessionStorage instead of localStorage so each tab has its own username
+    const sessionUsername = sessionStorage.getItem(`polyflix_username_${market?.id}`);
+    return sessionUsername || `User_${Math.random().toString(36).substring(7)}`;
+  });
+  const [wsConnected, setWsConnected] = useState(false);
+  const [showUsernameModal, setShowUsernameModal] = useState(false);
+  const [tempUsername, setTempUsername] = useState(username);
+  const wsRef = useRef(null);
 
   const closeTimerRef = useRef(null);
   const onCloseRef = useRef(onClose);
   const bodyRef = useRef(null);
   const dropdownRef = useRef(null);
+  const tabsHeaderRef = useRef(null);
 
   // Load watchlists - use props if provided, otherwise load from localStorage
   useEffect(() => {
@@ -47,6 +60,7 @@ function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatc
     setIsClosing(false);
     setIsExpanded(false);
     setShowWatchlistDropdown(false);
+    setChatMessages([]);
     if (closeTimerRef.current) {
       window.clearTimeout(closeTimerRef.current);
       closeTimerRef.current = null;
@@ -139,6 +153,40 @@ function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatc
     setCheckedWatchlists(newChecked);
   };
 
+  const handleSendMessage = () => {
+    if (!chatInput.trim() || !wsConnected || !wsRef.current) return;
+
+    try {
+      wsRef.current.send(JSON.stringify({
+        type: 'message',
+        username: username,
+        text: chatInput.trim(),
+        marketId: market.id,
+        timestamp: new Date().toLocaleTimeString()
+      }));
+      
+      setChatInput('');
+    } catch (error) {
+      console.error('❌ Error sending message:', error);
+    }
+  };
+
+  const handleSetUsername = (newUsername) => {
+    if (newUsername.trim()) {
+      setUsername(newUsername.trim());
+      // Store in sessionStorage per market so each tab has its own username
+      if (market?.id) {
+        sessionStorage.setItem(`polyflix_username_${market.id}`, newUsername.trim());
+      }
+      setTempUsername(newUsername.trim());
+      setShowUsernameModal(false);
+      // Reconnect WebSocket with new username
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    }
+  };
+
   useEffect(() => {
     onCloseRef.current = onClose;
   }, [onClose]);
@@ -164,6 +212,86 @@ function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatc
     };
   }, []);
 
+  // Update tab indicator position
+  useEffect(() => {
+    if (!tabsHeaderRef.current) return;
+    
+    const activeBtn = tabsHeaderRef.current.querySelector('.marketModal__tab-btn.active');
+    if (!activeBtn) return;
+
+    const indicator = tabsHeaderRef.current.querySelector('::after');
+    const left = activeBtn.offsetLeft;
+    const width = activeBtn.offsetWidth;
+
+    // Update CSS variables for the sliding indicator
+    tabsHeaderRef.current.style.setProperty('--tab-left', `${left}px`);
+    tabsHeaderRef.current.style.setProperty('--tab-width', `${width}px`);
+  }, [activeTab]);
+
+  // WebSocket connection for Watch Party
+  useEffect(() => {
+    if (activeTab !== 'watchparty' || !market) return;
+
+    const connectWebSocket = () => {
+      try {
+        const wsUrl = `ws://localhost:5003/chat/${market.id}`;
+        const ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          console.log('✅ WebSocket connected to Watch Party for market:', market.id);
+          setWsConnected(true);
+          
+          // Send username when connecting
+          ws.send(JSON.stringify({
+            type: 'join',
+            username: username,
+            marketId: market.id
+          }));
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const message = JSON.parse(event.data);
+            if (message.type === 'message' || message.type === 'user_join') {
+              setChatMessages(prev => [...prev, {
+                id: Date.now(),
+                username: message.username,
+                text: message.text || `${message.username} joined the chat`,
+                timestamp: new Date().toLocaleTimeString(),
+                type: message.type
+              }]);
+            }
+          } catch (error) {
+            console.error('Error parsing message:', error);
+          }
+        };
+
+        ws.onerror = (error) => {
+          console.error('❌ WebSocket error:', error);
+          setWsConnected(false);
+        };
+
+        ws.onclose = () => {
+          console.log('⚠️ WebSocket disconnected');
+          setWsConnected(false);
+        };
+
+        wsRef.current = ws;
+      } catch (error) {
+        console.error('❌ Failed to connect to WebSocket:', error);
+        setWsConnected(false);
+      }
+    };
+
+    connectWebSocket();
+
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, [activeTab, market?.id, username]);
+
   if (!market) return null;
 
   const description = market.question || 'No description available yet for this market.';
@@ -187,6 +315,35 @@ function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatc
       className={`marketModal ${isClosing ? 'marketModal--closing' : ''}`}
       onClick={handleClose}
     >
+      {showUsernameModal && (
+        <div className="marketModal__username-modal">
+          <div className="marketModal__username-content">
+            <h3>Change Username</h3>
+            <input
+              type="text"
+              value={tempUsername}
+              onChange={(e) => setTempUsername(e.target.value)}
+              placeholder="Enter your username"
+              onKeyPress={(e) => e.key === 'Enter' && handleSetUsername(tempUsername)}
+              autoFocus
+            />
+            <div className="marketModal__username-buttons">
+              <button
+                className="marketModal__username-btn-confirm"
+                onClick={() => handleSetUsername(tempUsername)}
+              >
+                Confirm
+              </button>
+              <button
+                className="marketModal__username-btn-cancel"
+                onClick={() => setShowUsernameModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div
         className="marketModal__dialog"
         onClick={(event) => event.stopPropagation()}
@@ -364,6 +521,99 @@ function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatc
           >
             Trade Now
           </button>
+
+          <div className="marketModal__tabs">
+            <div className="marketModal__tabs-header" ref={tabsHeaderRef}>
+              <button
+                className={`marketModal__tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
+                onClick={() => setActiveTab('overview')}
+              >
+                Ask AI
+              </button>
+              <button
+                className={`marketModal__tab-btn ${activeTab === 'watchparty' ? 'active' : ''}`}
+                onClick={() => setActiveTab('watchparty')}
+              >
+                Watch Party
+              </button>
+              <button
+                className={`marketModal__tab-btn ${activeTab === 'report' ? 'active' : ''}`}
+                onClick={() => setActiveTab('report')}
+              >
+                Report
+              </button>
+            </div>
+
+            <div className="marketModal__tabs-content">
+              {activeTab === 'overview' && (
+                <div className="marketModal__tab-pane">
+                  <h4>Ask AI</h4>
+                  <p>AI analysis for this market coming soon...</p>
+                </div>
+              )}
+
+              {activeTab === 'watchparty' && (
+                <div className="marketModal__tab-pane">
+                  <h4>Watch Party</h4>
+                  <div className="marketModal__chat-header-info">
+                    <span>👤 Joined as: <strong>{username}</strong></span>
+                    <button
+                      className="marketModal__change-username-btn"
+                      onClick={() => {
+                        setTempUsername(username);
+                        setShowUsernameModal(true);
+                      }}
+                    >
+                      Change Name
+                    </button>
+                  </div>
+                  <div className="marketModal__chat">
+                    <div className="marketModal__chat-messages">
+                      {chatMessages.length === 0 ? (
+                        <div className="marketModal__chat-empty">
+                          <p>No messages yet. Be the first to comment!</p>
+                        </div>
+                      ) : (
+                        chatMessages.map((msg) => (
+                          <div key={msg.id} className={`marketModal__chat-message marketModal__chat-message--${msg.type}`}>
+                            <span className="marketModal__chat-username">{msg.username}</span>
+                            <span className="marketModal__chat-text">{msg.text}</span>
+                            <span className="marketModal__chat-timestamp">{msg.timestamp}</span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    <div className="marketModal__chat-input-container">
+                      <input
+                        type="text"
+                        className="marketModal__chat-input"
+                        placeholder="Type your message..."
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                        disabled={!wsConnected}
+                      />
+                      <button
+                        className="marketModal__chat-send"
+                        onClick={handleSendMessage}
+                        disabled={!wsConnected || !chatInput.trim()}
+                      >
+                        {wsConnected ? 'Send' : 'Connecting...'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'report' && (
+                <div className="marketModal__tab-pane">
+                  <h4>Report</h4>
+                  <p>Report suspicious activity or inaccurate information...</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

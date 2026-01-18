@@ -1,0 +1,19 @@
+{
+  "name": "polyflix-watchparty-server",
+  "version": "1.0.0",
+  "description": "WebSocket server for Polyflix Watch Party live chat",
+  "main": "watchparty-server.js",
+  "scripts": {
+    "start": "node watchparty-server.js",
+    "dev": "nodemon watchparty-server.js"
+  },
+  "keywords": ["websocket", "chat", "polymarket"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.14.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

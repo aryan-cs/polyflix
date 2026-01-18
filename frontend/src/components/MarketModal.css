@@ -503,3 +503,289 @@
   border-radius: 10px;
   flex-shrink: 0;
 }
+
+.marketModal__tabs {
+  margin-top: 30px;
+  border-top: 1px solid #333;
+  padding-top: 20px;
+}
+
+.marketModal__tabs-header {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #2a2a4a;
+  position: relative;
+  --tab-left: 0px;
+  --tab-width: 0px;
+}
+
+.marketModal__tabs-header::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: var(--tab-left);
+  width: var(--tab-width);
+  height: 3px;
+  background: linear-gradient(90deg, #00ff41, #00a8ff);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 2px;
+}
+
+.marketModal__tab-btn {
+  padding: 10px 20px;
+  background: transparent;
+  border: none;
+  color: #888;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  font-size: 0.95rem;
+  position: relative;
+}
+
+.marketModal__tab-btn:hover {
+  color: #fff;
+}
+
+.marketModal__tab-btn.active {
+  color: #00ff41;
+}
+
+.marketModal__tabs-content {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.marketModal__tab-pane {
+  animation: fadeIn 0.3s ease;
+}
+
+.marketModal__tab-pane h4 {
+  margin: 0 0 10px 0;
+  color: #00ff41;
+  font-size: 1.1rem;
+}
+
+.marketModal__tab-pane p {
+  margin: 0;
+  color: #aaa;
+  line-height: 1.6;
+}
+
+.marketModal__chat {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  height: 300px;
+}
+
+.marketModal__chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  background: #0a0e27;
+  border-radius: 6px;
+  border: 1px solid #2a2a4a;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.marketModal__chat-message {
+  padding: 8px 10px;
+  background: #0f1533;
+  border-left: 3px solid #00ff41;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.marketModal__chat-message--user_join {
+  background: #1a3a1a;
+  border-left-color: #4CAF50;
+  opacity: 0.8;
+}
+
+.marketModal__chat-username {
+  font-weight: bold;
+  color: #00ff41;
+  margin-right: 8px;
+}
+
+.marketModal__chat-text {
+  color: #ddd;
+  word-break: break-word;
+  display: block;
+  margin: 4px 0;
+}
+
+.marketModal__chat-timestamp {
+  font-size: 0.75rem;
+  color: #666;
+  display: block;
+}
+
+.marketModal__chat-input-container {
+  display: flex;
+  gap: 8px;
+}
+
+.marketModal__chat-input {
+  flex: 1;
+  padding: 8px 12px;
+  background: #0a0e27;
+  border: 1px solid #2a2a4a;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.marketModal__chat-input::placeholder {
+  color: #666;
+}
+
+.marketModal__chat-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.marketModal__chat-send {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #00ff41, #00a8ff);
+  border: none;
+  border-radius: 4px;
+  color: #000;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.marketModal__chat-send:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 2px 6px rgba(0, 255, 65, 0.3);
+}
+
+.marketModal__chat-send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.marketModal__username-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.marketModal__username-content {
+  background: #1a1a2e;
+  padding: 30px;
+  border-radius: 10px;
+  max-width: 400px;
+  width: 90%;
+  border: 1px solid #333;
+}
+
+.marketModal__username-content h3 {
+  margin: 0 0 15px 0;
+  color: #00ff41;
+  font-size: 1.3rem;
+}
+
+.marketModal__username-content input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  background: #0a0e27;
+  border: 1px solid #333;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.marketModal__username-content input::placeholder {
+  color: #666;
+}
+
+.marketModal__username-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.marketModal__username-btn-confirm {
+  flex: 1;
+  padding: 12px;
+  background: linear-gradient(135deg, #00ff41, #00a8ff);
+  border: none;
+  border-radius: 4px;
+  color: #000;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.marketModal__username-btn-confirm:hover {
+  transform: scale(1.05);
+}
+
+.marketModal__username-btn-cancel {
+  flex: 1;
+  padding: 12px;
+  background: #333;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.marketModal__username-btn-cancel:hover {
+  background: #444;
+}
+
+.marketModal__chat-header-info {
+  background: #0f1533;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.marketModal__change-username-btn {
+  padding: 6px 12px;
+  background: #00ff41;
+  border: none;
+  border-radius: 4px;
+  color: #000;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.marketModal__change-username-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 6px rgba(0, 255, 65, 0.3);
+}

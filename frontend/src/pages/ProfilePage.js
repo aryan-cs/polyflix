@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getWatchlists, getBlacklist } from './MyWatchlists';
+import { USE_GEMINI_MODE } from '../config/features';
 import './ProfilePage.css';
 
 // Extract keywords from market titles
@@ -60,9 +61,230 @@ const getCategoryColor = (category) => {
   return colors[category] || colors.Other;
 };
 
+// NON-GEMINI MODE: Generate interests from keywords
+const generateInterestsFromKeywords = (keywords) => {
+  if (keywords.length === 0) return [];
+  
+  // Take top keywords and create interest phrases
+  const topKeywords = keywords.slice(0, 8);
+  const interests = [];
+  
+  // Group related keywords together
+  const used = new Set();
+  for (const { word } of topKeywords) {
+    if (used.has(word)) continue;
+    
+    // Find related keywords (same root or similar)
+    const related = topKeywords.filter(k => {
+      if (k.word === word) return true;
+      const normalized = (w) => w.toLowerCase();
+      const w1 = normalized(word);
+      const w2 = normalized(k.word);
+      return w1.includes(w2) || w2.includes(w1) || 
+             w1.substring(0, 4) === w2.substring(0, 4);
+    });
+    
+    // Create interest from top related keyword or combine if multiple
+    if (related.length > 1 && related[0].word !== word) {
+      interests.push(`${related[0].word} ${word}`);
+      related.forEach(r => used.add(r.word));
+    } else {
+      interests.push(word);
+      used.add(word);
+    }
+    
+    if (interests.length >= 5) break;
+  }
+  
+  return deduplicateInterests(interests).slice(0, 5);
+};
+
+// NON-GEMINI MODE: Generate categories from keywords and markets
+const generateCategoriesFromKeywords = (markets, keywords) => {
+  const categoryKeywords = {
+    Sports: ['sports', 'nfl', 'nba', 'mlb', 'soccer', 'football', 'basketball', 'baseball', 'hockey', 'tennis', 'golf', 'ufc', 'boxing', 'olympics'],
+    Politics: ['trump', 'biden', 'election', 'president', 'senate', 'congress', 'supreme', 'court', 'political', 'vote', 'democrat', 'republican'],
+    Crypto: ['bitcoin', 'crypto', 'ethereum', 'btc', 'eth', 'blockchain', 'defi', 'nft', 'coin', 'token'],
+    Finance: ['stock', 'market', 'dollar', 'inflation', 'fed', 'interest', 'rate', 'economy', 'trading', 'investment'],
+    Tech: ['ai', 'artificial', 'intelligence', 'tech', 'apple', 'google', 'microsoft', 'meta', 'tesla', 'software'],
+    Entertainment: ['oscar', 'grammy', 'movie', 'film', 'music', 'celebrity', 'award', 'show', 'tv', 'series'],
+    Science: ['space', 'nasa', 'climate', 'weather', 'research', 'study', 'discovery'],
+    Business: ['company', 'business', 'corporate', 'earnings', 'revenue', 'profit']
+  };
+  
+  const categoryCounts = {};
+  const totalMarkets = markets.length;
+  
+  // Count markets by category based on keywords
+  markets.forEach(market => {
+    const title = (market.title || '').toLowerCase();
+    let categorized = false;
+    
+    for (const [category, keywords] of Object.entries(categoryKeywords)) {
+      if (keywords.some(kw => title.includes(kw))) {
+        categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+        categorized = true;
+        break;
+      }
+    }
+    
+    if (!categorized) {
+      categoryCounts['Other'] = (categoryCounts['Other'] || 0) + 1;
+    }
+  });
+  
+  // Convert to percentage format
+  return Object.entries(categoryCounts)
+    .map(([category, count]) => ({
+      category,
+      percentage: Math.round((count / totalMarkets) * 100)
+    }))
+    .filter(c => c.percentage > 0)
+    .sort((a, b) => b.percentage - a.percentage);
+};
+
+// NON-GEMINI MODE: Generate summary from keywords
+const generateSummaryFromKeywords = (keywords, markets, dislikedMarkets) => {
+  if (keywords.length === 0) {
+    return 'Add markets to your watchlists to see your interests here.';
+  }
+  
+  const topInterests = keywords.slice(0, 3).map(k => k.word).join(', ');
+  const marketCount = markets.length;
+  const dislikeCount = dislikedMarkets.length;
+  
+  let summary = `You're tracking ${marketCount} market${marketCount !== 1 ? 's' : ''} with interests in ${topInterests}.`;
+  
+  if (dislikeCount > 0) {
+    summary += ` You've filtered out ${dislikeCount} market${dislikeCount !== 1 ? 's' : ''} that don't match your preferences.`;
+  }
+  
+  return summary;
+};
+
+// Deduplicate overlapping interests
+const deduplicateInterests = (interests) => {
+  if (interests.length <= 1) return interests;
+
+  const normalized = (str) => str.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+  const getWords = (str) => normalized(str).split(/\s+/).filter(w => w.length > 2);
+
+  const filtered = [];
+  for (const interest of interests) {
+    const interestWords = getWords(interest);
+    let isDuplicate = false;
+
+    for (const existing of filtered) {
+      const existingWords = getWords(existing);
+      // Check if they share significant words (more than 50% overlap)
+      const commonWords = interestWords.filter(w => existingWords.includes(w));
+      const overlapRatio = commonWords.length / Math.max(interestWords.length, existingWords.length);
+      
+      // Also check if one is a substring of the other
+      const normalizedInterest = normalized(interest);
+      const normalizedExisting = normalized(existing);
+      const isSubstring = normalizedInterest.includes(normalizedExisting) || 
+                         normalizedExisting.includes(normalizedInterest);
+
+      if (overlapRatio > 0.5 || isSubstring) {
+        isDuplicate = true;
+        break;
+      }
+    }
+
+    if (!isDuplicate) {
+      filtered.push(interest);
+    }
+  }
+
+  return filtered;
+};
+
+// Generate a hash/fingerprint of watchlist and blacklist data
+const generateDataHash = (markets, blacklist) => {
+  const marketIds = markets.map(m => m.id).sort().join(',');
+  const blacklistIds = blacklist.map(m => m.id).sort().join(',');
+  const combined = `${marketIds}|${blacklistIds}`;
+  
+  // Simple hash function
+  let hash = 0;
+  for (let i = 0; i < combined.length; i++) {
+    const char = combined.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return hash.toString();
+};
+
+// Get stored data hash from localStorage
+const getStoredDataHash = () => {
+  try {
+    return localStorage.getItem('polyflix_data_hash');
+  } catch {
+    return null;
+  }
+};
+
+// Store data hash in localStorage
+const storeDataHash = (hash) => {
+  try {
+    localStorage.setItem('polyflix_data_hash', hash);
+  } catch (e) {
+    console.error('Error storing data hash:', e);
+  }
+};
+
+// Get stored interests from localStorage
+export const getStoredInterests = () => {
+  try {
+    const stored = localStorage.getItem('polyflix_interests');
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
+// Get stored AI summary from localStorage
+const getStoredAiSummary = () => {
+  try {
+    return localStorage.getItem('polyflix_ai_summary') || '';
+  } catch {
+    return '';
+  }
+};
+
+// Store AI summary in localStorage
+const storeAiSummary = (summary) => {
+  try {
+    localStorage.setItem('polyflix_ai_summary', summary);
+  } catch (e) {
+    console.error('Error storing AI summary:', e);
+  }
+};
+
+// Get stored categories from localStorage
+const getStoredCategories = () => {
+  try {
+    const stored = localStorage.getItem('polyflix_categories');
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
+// Store categories in localStorage
+const storeCategories = (categories) => {
+  try {
+    localStorage.setItem('polyflix_categories', JSON.stringify(categories));
+  } catch (e) {
+    console.error('Error storing categories:', e);
+  }
+};
+
 function ProfilePage() {
   const [keywords, setKeywords] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [interests, setInterests] = useState([]);
   const [stats, setStats] = useState({
     totalWatchlists: 0,
     totalMarkets: 0,
@@ -71,6 +293,7 @@ function ProfilePage() {
   const [aiSummary, setAiSummary] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [interestsLoading, setInterestsLoading] = useState(false);
 
   useEffect(() => {
     // Load data from localStorage
@@ -91,12 +314,66 @@ function ProfilePage() {
       totalDislikes: loadedBlacklist.length
     });
 
-    // Generate AI-powered content if we have data
+    // Check if data has changed
+    const currentHash = generateDataHash(allMarkets, loadedBlacklist);
+    const storedHash = getStoredDataHash();
+
     if (allMarkets.length > 0) {
-      generateAiContent(allMarkets, loadedBlacklist);
+      if (currentHash === storedHash) {
+        // Data hasn't changed, load from localStorage
+        const storedInterests = getStoredInterests();
+        const storedSummary = getStoredAiSummary();
+        const storedCategories = getStoredCategories();
+        
+        setInterests(storedInterests);
+        setAiSummary(storedSummary);
+        setCategories(storedCategories);
+      } else {
+        // Data has changed, regenerate content
+        storeDataHash(currentHash);
+        
+        if (USE_GEMINI_MODE) {
+          // Gemini mode: use AI
+          generateAiContent(allMarkets, loadedBlacklist);
+        } else {
+          // Non-Gemini mode: use keywords
+          generateKeywordContent(allMarkets, loadedBlacklist, extractedKeywords);
+        }
+      }
+    } else {
+      // No markets, clear stored data
+      setInterests([]);
+      setAiSummary('');
+      setCategories([]);
+      if (storedHash !== null) {
+        // Clear the hash so it regenerates when markets are added back
+        localStorage.removeItem('polyflix_data_hash');
+        localStorage.removeItem('polyflix_interests');
+        localStorage.removeItem('polyflix_ai_summary');
+        localStorage.removeItem('polyflix_categories');
+      }
     }
   }, []);
 
+  // NON-GEMINI MODE: Generate content from keywords
+  const generateKeywordContent = (markets, dislikedMarkets, keywords) => {
+    // Generate interests
+    const keywordInterests = generateInterestsFromKeywords(keywords);
+    setInterests(keywordInterests);
+    localStorage.setItem('polyflix_interests', JSON.stringify(keywordInterests));
+    
+    // Generate categories
+    const keywordCategories = generateCategoriesFromKeywords(markets, keywords);
+    setCategories(keywordCategories);
+    storeCategories(keywordCategories);
+    
+    // Generate summary
+    const keywordSummary = generateSummaryFromKeywords(keywords, markets, dislikedMarkets);
+    setAiSummary(keywordSummary);
+    storeAiSummary(keywordSummary);
+  };
+
+  // GEMINI MODE: Generate content using AI
   const generateAiContent = async (markets, dislikedMarkets) => {
     const API_KEY = process.env.REACT_APP_GEMINI_API_KEY;
     if (!API_KEY) {
@@ -116,12 +393,80 @@ function ProfilePage() {
 
     // Generate Category Breakdown
     generateCategoryBreakdown(API_KEY, marketTitles);
+
+    // Generate interests for For You page
+    generateInterests(API_KEY, marketTitles);
+  };
+
+  const generateInterests = async (API_KEY, marketTitles) => {
+    setInterestsLoading(true);
+    try {
+      const response = await fetch(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': API_KEY
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: `Analyze these prediction market titles and identify the user's distinct interest areas for finding similar markets.
+
+Markets in their watchlist:
+- ${marketTitles}
+
+Rules:
+1. Return 2-5 interests (fewer is better if interests overlap)
+2. Each interest must be COMPLETELY DIFFERENT from the others - no overlapping topics
+3. Each interest should be 1-3 words, good as a search query
+4. Prioritize specificity: "NBA playoffs" is better than "sports"
+5. If multiple markets are about the same broad topic (e.g., Trump, Supreme Court), pick ONE representative interest, not multiple variations
+6. Cover the breadth of their interests, not depth in one area
+
+BAD example (too similar): ["Trump tariffs", "Trump travel", "Trump policies", "Supreme Court", "Supreme Court decisions"]
+GOOD example (diverse): ["Trump policies", "Bitcoin price", "NBA playoffs", "Oscar winners"]
+
+Return ONLY a JSON array of strings, nothing else. Example: ["NBA playoffs", "Bitcoin price", "US elections"]`
+              }]
+            }]
+          })
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        try {
+          const jsonMatch = text.match(/\[.*\]/s);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            // Deduplicate to remove any overlapping interests
+            const deduplicated = deduplicateInterests(parsed);
+            const validInterests = deduplicated.slice(0, 5);
+            setInterests(validInterests);
+            localStorage.setItem('polyflix_interests', JSON.stringify(validInterests));
+            console.log('Stored interests:', validInterests);
+          }
+        } catch (e) {
+          console.error('Error parsing interests JSON:', e, text);
+        }
+      } else {
+        const error = await response.text();
+        console.error('Gemini API error (interests):', response.status, error);
+      }
+    } catch (error) {
+      console.error('Error generating interests:', error);
+    } finally {
+      setInterestsLoading(false);
+    }
   };
 
   const generateAiSummary = async (API_KEY, marketTitles, dislikedTitles) => {
     try {
       const response = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent',
         {
           method: 'POST',
           headers: {
@@ -149,7 +494,9 @@ Write ONLY the summary, no intro or labels. Keep it under 50 words.`
       if (response.ok) {
         const data = await response.json();
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        setAiSummary(text.trim());
+        const summary = text.trim();
+        setAiSummary(summary);
+        storeAiSummary(summary);
       } else {
         const error = await response.text();
         console.error('Gemini API error (summary):', response.status, error);
@@ -164,7 +511,7 @@ Write ONLY the summary, no intro or labels. Keep it under 50 words.`
   const generateCategoryBreakdown = async (API_KEY, marketTitles) => {
     try {
       const response = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent',
         {
           method: 'POST',
           headers: {
@@ -196,7 +543,9 @@ Return ONLY a JSON array like this, nothing else:
           const jsonMatch = text.match(/\[.*\]/s);
           if (jsonMatch) {
             const parsed = JSON.parse(jsonMatch[0]);
-            setCategories(parsed.filter(c => c.percentage > 0).sort((a, b) => b.percentage - a.percentage));
+            const filteredCategories = parsed.filter(c => c.percentage > 0).sort((a, b) => b.percentage - a.percentage);
+            setCategories(filteredCategories);
+            storeCategories(filteredCategories);
           }
         } catch (e) {
           console.error('Error parsing categories JSON:', e, text);

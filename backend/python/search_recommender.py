@@ -266,7 +266,7 @@ class SearchRecommender:
         # Combine: 50% creation recency, 50% end date proximity
         return (creation_score * 0.5) + (end_date_score * 0.5)
 
-    def _extract_keywords_from_title(self, title: str, top_n: int = 2) -> List[str]:
+    def _extract_keywords_from_title(self, title: str, top_n: int = 3) -> List[str]:
         """
         Extract keywords from a single title.
 
@@ -296,6 +296,15 @@ class SearchRecommender:
             and len(word) > 2
             and not any(c.isdigit() for c in word)
         ]
+
+        # If too aggressive, relax filters - keep words with length > 2 that aren't stop words
+        if len(meaningful_words) < 2:
+            meaningful_words = [
+                word for word in words
+                if word not in STOP_WORDS
+                and len(word) > 2
+                and not any(c.isdigit() for c in word)
+            ]
 
         if not meaningful_words:
             return []

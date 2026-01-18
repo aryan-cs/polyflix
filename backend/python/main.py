@@ -33,10 +33,16 @@ recommender = SearchRecommender(debug=True)
 class Market(BaseModel):
     id: str
     title: str
-    volume: Optional[int] = 0
+    volume: Optional[float] = None  # Accept float/int/null, will be converted to int
 
     class Config:
         extra = "allow"  # Allow additional fields
+
+    def get_volume_int(self) -> int:
+        """Get volume as integer, defaulting to 0."""
+        if self.volume is None:
+            return 0
+        return int(self.volume)
 
 
 class RecommendationRequest(BaseModel):
@@ -146,6 +152,90 @@ async def search_markets(query: str):
         "query": query,
         "results": results,
         "count": len(results)
+    }
+
+
+class SimilarMarketsRequest(BaseModel):
+    market: Market
+    limit: Optional[int] = 3
+
+
+@app.post("/api/similar")
+async def get_similar_markets(request: SimilarMarketsRequest):
+    """
+    Get similar markets based on a single market.
+    Uses the market title to extract keywords and find related markets.
+    """
+    market_data = request.market.model_dump()
+    market_data["volume"] = request.market.get_volume_int()  # Ensure volume is int
+    limit = request.limit or 3
+    title = market_data.get("title", "")
+
+    # For a single market, extract more keywords directly from the title
+    # to ensure we have enough search terms
+    keywords = recommender._extract_keywords_from_title(title, top_n=4)
+
+    if recommender.debug:
+        print(f"\n{'='*60}")
+        print(f"SIMILAR MARKETS for: {title[:50]}...")
+        print(f"Extracted keywords: {keywords}")
+        print(f"{'='*60}")
+
+    if not keywords:
+        # Fallback: use the full title as a search query
+        keywords = [title.split()[0]] if title else []
+        if recommender.debug:
+            print(f"No keywords extracted, using fallback: {keywords}")
+
+    if not keywords:
+        return {
+            "similar": [],
+            "source_market": title,
+            "count": 0,
+            "keywords_used": []
+        }
+
+    # Search using extracted keywords
+    candidates = recommender._scattershot_search(keywords)
+
+    if not candidates:
+        return {
+            "similar": [],
+            "source_market": title,
+            "count": 0,
+            "keywords_used": keywords
+        }
+
+    # Score and filter candidates (exclude the source market)
+    import math
+    max_log_volume = max(math.log(m["volume"] + 1) for m in candidates.values())
+    source_id = market_data.get("id", "")
+    source_title_lower = title.lower().strip()
+
+    scored_markets = []
+    for market_id, candidate in candidates.items():
+        # Skip the source market itself
+        if market_id == source_id or candidate["title"].lower().strip() == source_title_lower:
+            continue
+
+        score_result = recommender._calculate_score(candidate, set(), max_log_volume)
+        scored_markets.append({
+            **candidate,
+            "score": score_result["final_score"],
+            "volume_score": score_result["volume_score"],
+            "novelty_score": score_result["novelty_score"],
+            "penalized": False,
+        })
+
+    # Sort by score and return top results
+    scored_markets.sort(key=lambda x: x["score"], reverse=True)
+    similar = scored_markets[:limit]
+
+    return {
+        "similar": similar,
+        "source_market": title,
+        "count": len(similar),
+        "keywords_used": keywords
     }
 
 

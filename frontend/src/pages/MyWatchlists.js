@@ -238,6 +238,7 @@ function MyWatchlists() {
           onClose={() => setSelectedMarket(null)}
           watchlists={watchlists}
           onToggleWatchlist={handleToggleWatchlist}
+          onSelectMarket={setSelectedMarket}
         />
       )}
     </div>

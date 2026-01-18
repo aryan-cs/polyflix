@@ -73,7 +73,8 @@ function Navbar() {
         <div className="navbar__left">
           <img src="/images/polyflix.png" alt="Polyflix" className="navbar__logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }} />
           <div className="navbar__links">
-            <span onClick={() => navigate('/')}>Home</span>
+            <span onClick={() => navigate('/')}>Discover</span>
+            <span onClick={() => navigate('/foryou')}>For You</span>
             <span onClick={() => navigate('/culture')}>Culture</span>
             <span onClick={() => navigate('/politics')}>Politics</span>
             <span onClick={() => navigate('/crypto')}>Crypto</span>

@@ -146,6 +146,78 @@ async function fetchMarketsForTags(tagIds, limit = 20, strategy = 'top') {
   return balancedMarkets;
 }
 
+// Search route - for For You page interests
+// Uses Gamma public-search endpoint (same as Python code)
+router.get('/search', async (req, res) => {
+  const query = req.query.q || '';
+  const limit = parseInt(req.query.limit) || 15;
+
+  console.log(`\n🔍 [SEARCH] Query: "${query}" (limit: ${limit})`);
+
+  if (!query) {
+    return res.json({ query: '', count: 0, markets: [] });
+  }
+
+  try {
+    // Use public-search endpoint like Python code
+    const response = await fetch(
+      `${GAMMA_API_BASE}/public-search?q=${encodeURIComponent(query)}&limit_per_type=${limit}`,
+      { headers: DEFAULT_HEADERS }
+    );
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const data = await response.json();
+    const markets = [];
+
+    // Extract markets from events (Gamma public-search API structure)
+    for (const event of data.events || []) {
+      // Each event can have multiple markets
+      for (const market of event.markets || []) {
+        markets.push({
+          id: market.id || event.id,
+          title: market.question || event.title,
+          question: market.question || event.title,
+          volumeNum: parseFloat(market.volume || event.volume || 0),
+          image: event.image || '',
+          slug: event.slug || market.slug || '',
+          endDate: market.endDate || event.endDate || '',
+          category: event.category || '',
+          outcomePrices: market.outcomePrices || null,
+          hasBinaryOutcomes: market.hasBinaryOutcomes !== undefined ? market.hasBinaryOutcomes : true,
+        });
+      }
+
+      // If no markets array, treat the event itself as a market
+      if (!event.markets || event.markets.length === 0) {
+        markets.push({
+          id: event.id,
+          title: event.title,
+          question: event.title,
+          volumeNum: parseFloat(event.volume || 0),
+          image: event.image || '',
+          slug: event.slug || '',
+          endDate: event.endDate || '',
+          category: event.category || '',
+          outcomePrices: null,
+          hasBinaryOutcomes: true,
+        });
+      }
+    }
+
+    console.log(`✅ [SEARCH] Found ${markets.length} markets for "${query}"`);
+
+    res.json({
+      query,
+      count: markets.length,
+      markets
+    });
+  } catch (error) {
+    console.error('❌ SEARCH ERROR:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Trending route
 router.get('/trending', async (req, res) => {
   console.log(`\n📈 [TRENDING]`);

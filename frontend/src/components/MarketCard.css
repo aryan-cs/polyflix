@@ -104,13 +104,13 @@
 }
 
 .marketCard__control--primary {
-  background: white;
-  color: black;
+  background: linear-gradient(90deg, #16a34a 0%, #16a34a 50%, #dc2626 50%, #dc2626 100%);
+  color: #ffffff;
   border: none;
 }
 
 .marketCard__control--primary:hover {
-  background: #e6e6e6;
+  filter: brightness(1.05);
 }
 
 .marketCard__control--right {

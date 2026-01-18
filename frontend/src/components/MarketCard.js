@@ -8,6 +8,72 @@ function MarketCard({ market, onSelectMarket }) {
       onSelectMarket(market);
     }
   };
+  const categoryLabel =
+    market?.category ||
+    market?.event?.category ||
+    market?.event?.title ||
+    'Market';
+  const endLabel = market?.endDate || market?.end_date || market?.end_time || 'TBD';
+  const keywords = (() => {
+    const tokens = [
+      market?.category,
+      market?.event?.title,
+      market?.event?.slug,
+      market?.question,
+      market?.title,
+      market?.name,
+      market?.slug,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .split(/\s+/)
+      .filter(Boolean);
+
+    const tagValues = Array.isArray(market?.tags)
+      ? market.tags
+          .map((tag) => {
+            if (typeof tag === 'string') return tag;
+            return tag?.label || tag?.name || tag?.slug || '';
+          })
+          .filter(Boolean)
+      : [];
+    const relatedTagValues = Array.isArray(market?.related_tags)
+      ? market.related_tags
+          .map((tag) => tag?.label || tag?.slug || '')
+          .filter(Boolean)
+      : [];
+
+    const combined = [
+      ...tokens,
+      ...tagValues.join(' ').toLowerCase().split(/\s+/),
+      ...relatedTagValues.join(' ').toLowerCase().split(/\s+/),
+    ];
+
+    const stop = new Set([
+      'will',
+      'the',
+      'a',
+      'an',
+      'to',
+      'of',
+      'in',
+      'by',
+      'for',
+      'on',
+      'and',
+      'or',
+      'vs',
+      'yes',
+      'no',
+      'market',
+    ]);
+    const unique = Array.from(
+      new Set(combined.filter((word) => word && !stop.has(word)))
+    );
+    return unique.slice(0, 3);
+  })();
   const showOutcomePairs =
     Array.isArray(market?.outcomePairs) &&
     market.outcomePairs.length > 0 &&
@@ -37,12 +103,16 @@ function MarketCard({ market, onSelectMarket }) {
         {isHovered && (
           <div className="marketCard__panel" onClick={handleOpen}>
             <div className="marketCard__content">
-              <div
-                className="marketCard__actions"
-                onClick={(e) => e.stopPropagation()}
-              >
+              <div className="marketCard__actions" onClick={(e) => e.stopPropagation()}>
                 <div className="marketCard__actions-left">
-                  <button className="marketCard__control marketCard__control--primary" aria-label="Play">
+                  <button
+                    className="marketCard__control marketCard__control--primary"
+                    aria-label="Play"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpen();
+                    }}
+                  >
                     <svg viewBox="0 0 24 24" width="24" height="24" data-icon="PlayMedium" aria-hidden="true" fill="none">
                       <path fill="currentColor" d="M5 2.7a1 1 0 0 1 1.48-.88l16.93 9.3a1 1 0 0 1 0 1.76l-16.93 9.3A1 1 0 0 1 5 21.31z"></path>
                     </svg>
@@ -66,17 +136,20 @@ function MarketCard({ market, onSelectMarket }) {
               </div>
 
             <div className="marketCard__metaRow">
-              <span className="marketCard__rating">R</span>
-              <span className="marketCard__duration">3h</span>
+                <span className="marketCard__rating">{categoryLabel}</span>
+                <span className="marketCard__duration">{endLabel}</span>
               <span className="marketCard__hd">HD</span>
             </div>
 
               <div className="marketCard__tags">
-                <span>Slick</span>
-                <span> • </span>
-                <span>Raunchy</span>
-                <span> • </span>
-                <span>Dark Comedy</span>
+                {(keywords.length ? keywords : ['Trending', 'Live', 'Polymarket']).map(
+                  (word, index) => (
+                    <React.Fragment key={`${word}-${index}`}>
+                      {index > 0 && <span> • </span>}
+                      <span>{word}</span>
+                    </React.Fragment>
+                  )
+                )}
               </div>
 
               <div className="marketCard__priceInline">

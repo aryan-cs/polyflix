@@ -7,11 +7,19 @@
     padding-bottom: 60px;
 }
 
+/* Header Row - Profile + AI Insight side by side */
+.profilePage__headerRow {
+    display: flex;
+    align-items: stretch;
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
 .profilePage__header {
     display: flex;
     align-items: center;
     gap: 24px;
-    margin-bottom: 40px;
+    flex-shrink: 0;
 }
 
 .profilePage__avatar {
@@ -25,6 +33,12 @@
     font-size: 3rem;
     font-weight: bold;
     color: white;
+    overflow: hidden;
+}
+
+.profilePage__avatar svg {
+    width: 60px;
+    height: 60px;
 }
 
 .profilePage__info h1 {
@@ -39,13 +53,7 @@
     margin: 0;
 }
 
-.profilePage__stats {
-    display: flex;
-    gap: 24px;
-    margin-bottom: 30px;
-}
-
-/* AI Summary */
+/* AI Summary - Now inline with header */
 .profilePage__aiSummary {
     display: flex;
     align-items: flex-start;
@@ -54,7 +62,7 @@
     border: 1px solid #2a2a4a;
     border-radius: 12px;
     padding: 20px 24px;
-    margin-bottom: 40px;
+    flex: 1;
 }
 
 .profilePage__aiIcon {
@@ -112,38 +120,36 @@
     animation: pulse 1.5s ease-in-out infinite;
 }
 
-.profilePage__statCard {
-    background-color: #1a1a1a;
-    border-radius: 8px;
-    padding: 24px 40px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-width: 140px;
-}
-
-.profilePage__statNumber {
-    color: white;
-    font-size: 2.5rem;
-    font-weight: bold;
-}
-
-.profilePage__statLabel {
-    color: #808080;
-    font-size: 0.9rem;
-    margin-top: 4px;
-}
-
+/* Grid Sections - Updated layout */
 .profilePage__sections {
-    display: flex;
-    flex-direction: column;
-    gap: 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 24px;
 }
 
 .profilePage__section {
     background-color: #1a1a1a;
     border-radius: 8px;
-    padding: 30px;
+    padding: 24px;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+}
+
+.profilePage__section--half {
+    /* Half width sections */
+}
+
+.profilePage__section--tall {
+    grid-row: span 2;
+}
+
+.profilePage__sideBySide {
+    grid-column: span 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
 }
 
 .profilePage__section h2 {
@@ -163,36 +169,184 @@
     font-style: italic;
 }
 
-/* Keywords / Interest Tags */
-.profilePage__keywords {
-    display: flex;
-    flex-wrap: wrap;
+/* Activity Stats - 3x2 grid */
+.profilePage__activityStats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 12px;
+    flex: 1;
 }
 
-.profilePage__keyword {
+.profilePage__activityItem {
     background-color: #2a2a2a;
-    color: white;
-    padding: 8px 16px;
-    border-radius: 20px;
-    display: inline-flex;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 8px;
-    transition: background-color 0.2s ease, transform 0.2s ease;
+    justify-content: center;
+    text-align: center;
 }
 
-.profilePage__keyword:hover {
-    background-color: #3a3a3a;
-    transform: scale(1.05);
-}
-
-.profilePage__keywordCount {
-    background-color: #e50914;
-    color: white;
-    font-size: 0.7rem;
-    padding: 2px 6px;
-    border-radius: 10px;
+.profilePage__activityValue {
+    color: #50c878;
+    font-size: 1.8rem;
     font-weight: bold;
+    line-height: 1;
+}
+
+.profilePage__activityValue--positive {
+    color: #50c878;
+}
+
+.profilePage__activityLabel {
+    color: #808080;
+    font-size: 0.75rem;
+    margin-top: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Recent Trades */
+.profilePage__recentTrades {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+}
+
+.profilePage__recentTrade {
+    background-color: #2a2a2a;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.2s ease;
+}
+
+.profilePage__recentTrade:hover {
+    background-color: #3a3a3a;
+}
+
+.profilePage__recentTradeInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.profilePage__recentTradeTitle {
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.profilePage__recentTradeDate {
+    color: #808080;
+    font-size: 0.75rem;
+}
+
+.profilePage__recentTradeProfit {
+    color: #e50914;
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-left: 16px;
+}
+
+.profilePage__recentTradeProfit--positive {
+    color: #50c878;
+}
+
+/* Top Interests List - Large version */
+.profilePage__interestsList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+}
+
+.profilePage__interestsList--large {
+    gap: 16px;
+}
+
+.profilePage__interestItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background-color: #2a2a2a;
+    padding: 10px 14px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.profilePage__interestItem:hover {
+    background-color: #3a3a3a;
+}
+
+.profilePage__interestItem--large {
+    padding: 16px 20px;
+    gap: 16px;
+}
+
+.profilePage__interestRank {
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(135deg, #e50914, #b20710);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.profilePage__interestRank--large {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+}
+
+.profilePage__interestContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.profilePage__interestName {
+    color: white;
+    font-size: 0.95rem;
+    text-transform: capitalize;
+}
+
+.profilePage__interestName--large {
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+.profilePage__interestBarContainer {
+    height: 8px;
+    background-color: #3a3a3a;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.profilePage__interestBar {
+    height: 100%;
+    background: linear-gradient(135deg, #e50914, #b20710);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+.profilePage__interestCount {
+    color: #808080;
+    font-size: 0.9rem;
+    font-weight: 500;
+    min-width: 30px;
+    text-align: right;
 }
 
 /* Category Breakdown */
@@ -264,6 +418,31 @@
 }
 
 /* Responsive */
+@media (max-width: 1200px) {
+    .profilePage__sections {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .profilePage__section--tall {
+        grid-row: span 1;
+    }
+
+    .profilePage__sideBySide {
+        grid-column: span 1;
+        grid-template-columns: 1fr;
+    }
+
+    .profilePage__activityStats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 900px) {
+    .profilePage__headerRow {
+        flex-direction: column;
+    }
+}
+
 @media (max-width: 768px) {
     .profilePage {
         padding-left: 20px;
@@ -275,18 +454,16 @@
         text-align: center;
     }
 
-    .profilePage__stats {
-        flex-wrap: wrap;
-        justify-content: center;
+    .profilePage__sections {
+        grid-template-columns: 1fr;
     }
 
-    .profilePage__statCard {
-        min-width: 100px;
-        padding: 16px 24px;
+    .profilePage__section--tall {
+        grid-row: span 1;
     }
 
-    .profilePage__statNumber {
-        font-size: 1.8rem;
+    .profilePage__activityStats {
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .profilePage__categoryRow {

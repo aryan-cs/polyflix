@@ -253,7 +253,7 @@
 .navbar__avatar {
   width: 36px;
   height: 36px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e50914, #b20710);
   border-radius: 4px;
   display: flex;
   align-items: center;
@@ -261,6 +261,12 @@
   cursor: pointer;
   font-weight: 600;
   transition: transform 0.15s ease;
+  overflow: hidden;
+}
+
+.navbar__avatar svg {
+  width: 24px;
+  height: 24px;
 }
 
 @media (max-width: 768px) {

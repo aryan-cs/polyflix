@@ -1,13 +1,11 @@
 import React from 'react';
 import './TradeButton.css';
 
-function TradeButton({ url, optionA = "Option A", optionB = "Option B" }) {
+function TradeButton({ optionA = "Option A", optionB = "Option B", onClick }) {
   return (
-    <a 
-      href={url} 
-      target="_blank" 
-      rel="noopener noreferrer" 
+    <button
       className="trade-button"
+      onClick={onClick}
     >
       <div className="trade-button__option trade-button__option--yes">
         {optionA}
@@ -15,7 +13,7 @@ function TradeButton({ url, optionA = "Option A", optionB = "Option B" }) {
       <div className="trade-button__option trade-button__option--no">
         {optionB}
       </div>
-    </a>
+    </button>
   );
 }
 

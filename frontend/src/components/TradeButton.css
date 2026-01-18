@@ -8,6 +8,8 @@
   height: 45px;
   width: 200px;
   border: none;
+  padding: 0;
+  background: none;
 }
 
 .trade-button__option {

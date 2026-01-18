@@ -3,7 +3,7 @@ import './Banner.css';
 import TradeButton from './TradeButton';
 import MoreInfoButton from './MoreInfoButton';
 
-function Banner({ market }) {
+function Banner({ market, onMoreInfo }) {
   const [videoId, setVideoId] = useState(null);
 
   useEffect(() => {
@@ -68,12 +68,12 @@ function Banner({ market }) {
         </h2>
         
         <div className="banner__buttons">
-          <TradeButton 
-            url={market?.url} 
-            optionA={market?.optionA || "Yes"} 
-            optionB={market?.optionB || "No"} 
+          <TradeButton
+            optionA={market?.optionA || "Yes"}
+            optionB={market?.optionB || "No"}
+            onClick={onMoreInfo}
           />
-          <MoreInfoButton />
+          <MoreInfoButton onClick={onMoreInfo} />
         </div>
       </div>
       <div className="banner--fadeBottom" />

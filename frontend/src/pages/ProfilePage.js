@@ -563,142 +563,215 @@ Return ONLY a JSON array like this, nothing else:
 
   const blacklist = getBlacklist();
 
+  // Calculate max keyword count for bar scaling
+  const maxKeywordCount = keywords.length > 0 ? Math.max(...keywords.map(k => k.count)) : 1;
+
   return (
     <div className="profilePage">
-      <div className="profilePage__header">
-        <div className="profilePage__avatar">
-          <span>P</span>
-        </div>
-        <div className="profilePage__info">
-          <h1>Profile</h1>
-          <p className="profilePage__memberSince">Polyflix Member</p>
-        </div>
-      </div>
-
-      <div className="profilePage__stats">
-        <div className="profilePage__statCard">
-          <span className="profilePage__statNumber">{stats.totalWatchlists}</span>
-          <span className="profilePage__statLabel">Watchlists</span>
-        </div>
-        <div className="profilePage__statCard">
-          <span className="profilePage__statNumber">{stats.totalMarkets}</span>
-          <span className="profilePage__statLabel">Markets Watched</span>
-        </div>
-        <div className="profilePage__statCard">
-          <span className="profilePage__statNumber">{stats.totalDislikes}</span>
-          <span className="profilePage__statLabel">Dislikes</span>
-        </div>
-      </div>
-
-      {stats.totalMarkets > 0 && (
-        <div className="profilePage__aiSummary">
-          <div className="profilePage__aiIcon">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+      <div className="profilePage__headerRow">
+        <div className="profilePage__header">
+          <div className="profilePage__avatar">
+            <svg viewBox="0 0 24 24" width="60" height="60" fill="white">
+              <circle cx="12" cy="12" r="10" fill="currentColor"/>
+              <circle cx="8" cy="9" r="1.5" fill="#141414"/>
+              <circle cx="16" cy="9" r="1.5" fill="#141414"/>
+              <path d="M8 14c0 2 1.5 3 4 3s4-1 4-3" stroke="#141414" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
             </svg>
           </div>
-          <div className="profilePage__aiContent">
-            <span className="profilePage__aiLabel">AI Insight</span>
-            {aiLoading ? (
-              <p className="profilePage__aiText profilePage__aiText--loading">
-                Analyzing your interests...
-              </p>
-            ) : aiSummary ? (
-              <p className="profilePage__aiText">{aiSummary}</p>
-            ) : (
-              <p className="profilePage__aiText profilePage__aiText--empty">
-                Could not generate insight. Check console for errors.
-              </p>
-            )}
+          <div className="profilePage__info">
+            <h1>Mr. Buffet</h1>
+            <p className="profilePage__memberSince">Polyflix Member</p>
           </div>
         </div>
-      )}
 
-      <div className="profilePage__sections">
-        <section className="profilePage__section">
-          <h2>Your Interests</h2>
-          <p className="profilePage__sectionDesc">Keywords extracted from your watchlists</p>
-          {keywords.length > 0 ? (
-            <div className="profilePage__keywords">
-              {keywords.map(({ word, count }) => (
-                <span
-                  key={word}
-                  className="profilePage__keyword"
-                  style={{
-                    fontSize: `${Math.min(1.4, 0.9 + (count * 0.1))}rem`,
-                    opacity: Math.min(1, 0.6 + (count * 0.1))
-                  }}
-                >
-                  {word}
-                  <span className="profilePage__keywordCount">{count}</span>
-                </span>
-              ))}
+        {stats.totalMarkets > 0 && (
+          <div className="profilePage__aiSummary">
+            <div className="profilePage__aiIcon">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+              </svg>
             </div>
-          ) : (
-            <p className="profilePage__empty">
-              Add markets to your watchlists to see your interests here.
-            </p>
-          )}
-        </section>
-
-        <section className="profilePage__section">
-          <h2>Category Breakdown</h2>
-          <p className="profilePage__sectionDesc">How your interests are distributed (AI-powered)</p>
-          {categoriesLoading ? (
-            <p className="profilePage__aiText profilePage__aiText--loading">
-              Analyzing categories...
-            </p>
-          ) : categories.length > 0 ? (
-            <div className="profilePage__categories">
-              <div className="profilePage__categoryBars">
-                {categories.map(({ category, percentage }) => (
-                  <div key={category} className="profilePage__categoryRow">
-                    <span className="profilePage__categoryName">{category}</span>
-                    <div className="profilePage__categoryBarContainer">
-                      <div
-                        className="profilePage__categoryBar"
-                        style={{
-                          width: `${percentage}%`,
-                          backgroundColor: getCategoryColor(category)
-                        }}
-                      />
-                    </div>
-                    <span className="profilePage__categoryPercent">{percentage}%</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <p className="profilePage__empty">
-              Add markets to your watchlists to see your category breakdown.
-            </p>
-          )}
-        </section>
-
-        <section className="profilePage__section">
-          <h2>Disliked Topics</h2>
-          <p className="profilePage__sectionDesc">Markets you're not interested in</p>
-          {blacklist.length > 0 ? (
-            <div className="profilePage__dislikes">
-              {blacklist.slice(0, 10).map((market) => (
-                <span key={market.id} className="profilePage__dislike">
-                  {market.title.length > 40
-                    ? market.title.substring(0, 40) + '...'
-                    : market.title}
-                </span>
-              ))}
-              {blacklist.length > 10 && (
-                <span className="profilePage__dislikeMore">
-                  +{blacklist.length - 10} more
-                </span>
+            <div className="profilePage__aiContent">
+              <span className="profilePage__aiLabel">AI Insight</span>
+              {aiLoading ? (
+                <p className="profilePage__aiText profilePage__aiText--loading">
+                  Analyzing your interests...
+                </p>
+              ) : aiSummary ? (
+                <p className="profilePage__aiText">{aiSummary}</p>
+              ) : (
+                <p className="profilePage__aiText profilePage__aiText--empty">
+                  Could not generate insight. Check console for errors.
+                </p>
               )}
             </div>
+          </div>
+        )}
+      </div>
+
+      <div className="profilePage__sections">
+        {/* Row 1: Activity (half size) + Recent Trades + Top Interests (tall) */}
+        <section className="profilePage__section profilePage__section--half">
+          <h2>Activity</h2>
+          <p className="profilePage__sectionDesc">Your trading performance</p>
+          <div className="profilePage__activityStats">
+            <div className="profilePage__activityItem">
+              <span className="profilePage__activityValue">68%</span>
+              <span className="profilePage__activityLabel">Win Rate</span>
+            </div>
+            <div className="profilePage__activityItem">
+              <span className="profilePage__activityValue profilePage__activityValue--positive">+$1,247</span>
+              <span className="profilePage__activityLabel">Net Profit</span>
+            </div>
+            <div className="profilePage__activityItem">
+              <span className="profilePage__activityValue profilePage__activityValue--positive">+$523</span>
+              <span className="profilePage__activityLabel">Biggest Win</span>
+            </div>
+            <div className="profilePage__activityItem">
+              <span className="profilePage__activityValue">$3,890</span>
+              <span className="profilePage__activityLabel">Positions Value</span>
+            </div>
+            <div className="profilePage__activityItem">
+              <span className="profilePage__activityValue">{stats.totalWatchlists}</span>
+              <span className="profilePage__activityLabel">Watchlists</span>
+            </div>
+            <div className="profilePage__activityItem">
+              <span className="profilePage__activityValue">{stats.totalMarkets}</span>
+              <span className="profilePage__activityLabel">Markets Watched</span>
+            </div>
+          </div>
+        </section>
+
+        <section className="profilePage__section profilePage__section--half">
+          <h2>Recent Trades</h2>
+          <p className="profilePage__sectionDesc">Your latest activity</p>
+          <div className="profilePage__recentTrades">
+            <div className="profilePage__recentTrade">
+              <div className="profilePage__recentTradeInfo">
+                <span className="profilePage__recentTradeTitle">Fed decreases interest rates by 50+ bps</span>
+                <span className="profilePage__recentTradeDate">2 hours ago</span>
+              </div>
+              <span className="profilePage__recentTradeProfit profilePage__recentTradeProfit--positive">+$125</span>
+            </div>
+            <div className="profilePage__recentTrade">
+              <div className="profilePage__recentTradeInfo">
+                <span className="profilePage__recentTradeTitle">Will Trump acquire Greenland before 2027?</span>
+                <span className="profilePage__recentTradeDate">1 day ago</span>
+              </div>
+              <span className="profilePage__recentTradeProfit profilePage__recentTradeProfit--positive">+$89</span>
+            </div>
+            <div className="profilePage__recentTrade">
+              <div className="profilePage__recentTradeInfo">
+                <span className="profilePage__recentTradeTitle">Khamenei out as Supreme Leader of Iran</span>
+                <span className="profilePage__recentTradeDate">3 days ago</span>
+              </div>
+              <span className="profilePage__recentTradeProfit">-$45</span>
+            </div>
+          </div>
+        </section>
+
+        <section className="profilePage__section profilePage__section--tall">
+          <h2>Top Interests</h2>
+          <p className="profilePage__sectionDesc">AI-detected themes</p>
+          {interestsLoading ? (
+            <p className="profilePage__aiText profilePage__aiText--loading">
+              Analyzing interests...
+            </p>
+          ) : interests.length > 0 ? (
+            <div className="profilePage__interestsList profilePage__interestsList--large">
+              {interests.slice(0, 5).map((interest, idx) => {
+                // Find matching keyword count for bar width
+                const matchingKeyword = keywords.find(k =>
+                  interest.toLowerCase().includes(k.word.toLowerCase())
+                );
+                const count = matchingKeyword ? matchingKeyword.count : 1;
+                const barWidth = (count / maxKeywordCount) * 100;
+
+                return (
+                  <div key={idx} className="profilePage__interestItem profilePage__interestItem--large">
+                    <span className="profilePage__interestRank profilePage__interestRank--large">{idx + 1}</span>
+                    <div className="profilePage__interestContent">
+                      <span className="profilePage__interestName profilePage__interestName--large">{interest}</span>
+                      <div className="profilePage__interestBarContainer">
+                        <div
+                          className="profilePage__interestBar"
+                          style={{ width: `${barWidth}%` }}
+                        />
+                      </div>
+                    </div>
+                    <span className="profilePage__interestCount">{count}</span>
+                  </div>
+                );
+              })}
+            </div>
           ) : (
             <p className="profilePage__empty">
-              No disliked markets yet.
+              Add markets to see your top interests.
             </p>
           )}
         </section>
+
+        {/* Row 2: Category Breakdown + Disliked Topics side by side */}
+        <div className="profilePage__sideBySide">
+          <section className="profilePage__section">
+            <h2>Categories</h2>
+            <p className="profilePage__sectionDesc">Interest distribution</p>
+            {categoriesLoading ? (
+              <p className="profilePage__aiText profilePage__aiText--loading">
+                Analyzing...
+              </p>
+            ) : categories.length > 0 ? (
+              <div className="profilePage__categories">
+                <div className="profilePage__categoryBars">
+                  {categories.slice(0, 4).map(({ category, percentage }) => (
+                    <div key={category} className="profilePage__categoryRow">
+                      <span className="profilePage__categoryName">{category}</span>
+                      <div className="profilePage__categoryBarContainer">
+                        <div
+                          className="profilePage__categoryBar"
+                          style={{
+                            width: `${percentage}%`,
+                            backgroundColor: getCategoryColor(category)
+                          }}
+                        />
+                      </div>
+                      <span className="profilePage__categoryPercent">{percentage}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="profilePage__empty">
+                Add markets to see categories.
+              </p>
+            )}
+          </section>
+
+          <section className="profilePage__section">
+            <h2>Disliked Topics</h2>
+            <p className="profilePage__sectionDesc">Filtered out</p>
+            {blacklist.length > 0 ? (
+              <div className="profilePage__dislikes">
+                {blacklist.slice(0, 5).map((market) => (
+                  <span key={market.id} className="profilePage__dislike">
+                    {market.title.length > 30
+                      ? market.title.substring(0, 30) + '...'
+                      : market.title}
+                  </span>
+                ))}
+                {blacklist.length > 5 && (
+                  <span className="profilePage__dislikeMore">
+                    +{blacklist.length - 5} more
+                  </span>
+                )}
+              </div>
+            ) : (
+              <p className="profilePage__empty">
+                No disliked markets yet.
+              </p>
+            )}
+          </section>
+        </div>
       </div>
     </div>
   );

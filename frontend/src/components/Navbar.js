@@ -157,7 +157,12 @@ function Navbar() {
             )}
           </div>
           <div className="navbar__avatar" onClick={() => navigate('/profile')} style={{ cursor: 'pointer' }}>
-            <span>P</span>
+            <svg viewBox="0 0 24 24" width="32" height="32" fill="white">
+              <circle cx="12" cy="12" r="10" fill="currentColor"/>
+              <circle cx="8" cy="9" r="1.5" fill="#141414"/>
+              <circle cx="16" cy="9" r="1.5" fill="#141414"/>
+              <path d="M8 14c0 2 1.5 3 4 3s4-1 4-3" stroke="#141414" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+            </svg>
           </div>
         </div>
       </div>

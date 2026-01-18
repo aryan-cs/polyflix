@@ -4,7 +4,6 @@ import { getWatchlists, addMarketToWatchlist, removeMarketFromWatchlist } from '
 
 function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatchlist, onSelectMarket }) {
   const [isClosing, setIsClosing] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
 
   const [selectedOutcome, setSelectedOutcome] = useState('Yes');
   const [limitPrice, setLimitPrice] = useState('');
@@ -61,7 +60,6 @@ function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatc
   useEffect(() => {
     if (!market) return;
     setIsClosing(false);
-    setIsExpanded(false);
     setShowWatchlistDropdown(false);
     
     // Load chat messages from localStorage for this market
@@ -488,13 +486,6 @@ Only return the JSON array, nothing else.`
 
   if (!market) return null;
 
-  const description = market.question || 'No description available yet for this market.';
-  const shouldTruncate = description.length > 220;
-  const visibleDescription =
-    !shouldTruncate || isExpanded
-      ? description
-      : `${description.slice(0, 200).trim()}...`;
-
   const outcomePairs = Array.isArray(market.outcomePairs)
     ? market.outcomePairs
     : [];
@@ -556,13 +547,30 @@ Only return the JSON array, nothing else.`
         <div className="marketModal__body" ref={bodyRef}>
           <h2 className="marketModal__title">{market.title || market.question}</h2>
 
-          <div className="marketModal__watchlist-container">
-            <button
-              className={`marketModal__watchlist-btn ${watchlistCount > 0 ? 'marketModal__watchlist-btn--active' : ''}`}
-              onClick={() => setShowWatchlistDropdown(!showWatchlistDropdown)}
-            >
-              {watchlistCount > 0 ? `★ In ${watchlistCount} List${watchlistCount > 1 ? 's' : ''}` : '+ Watchlist'}
-            </button>
+          <div className="marketModal__actions-row">
+            {market.slug && (
+              <a
+                href={`https://polymarket.com/market/${market.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="marketModal__polymarket-btn"
+                title="View on Polymarket"
+              >
+                <img
+                  src={require('./polymarket.png')}
+                  alt="Polymarket"
+                  className="marketModal__polymarket-icon"
+                />
+                Polymarket
+              </a>
+            )}
+            <div className="marketModal__watchlist-container">
+              <button
+                className={`marketModal__watchlist-btn ${watchlistCount > 0 ? 'marketModal__watchlist-btn--active' : ''}`}
+                onClick={() => setShowWatchlistDropdown(!showWatchlistDropdown)}
+              >
+                {watchlistCount > 0 ? `★ In ${watchlistCount} List${watchlistCount > 1 ? 's' : ''}` : '+ Watchlist'}
+              </button>
 
             {showWatchlistDropdown && (
               <div ref={dropdownRef} className="marketModal__watchlist-dropdown">
@@ -596,20 +604,8 @@ Only return the JSON array, nothing else.`
                 )}
               </div>
             )}
+            </div>
           </div>
-
-          <p className="marketModal__description">
-            {visibleDescription}
-            {shouldTruncate && (
-              <button
-                className="marketModal__readMore"
-                type="button"
-                onClick={() => setIsExpanded((prev) => !prev)}
-              >
-                {isExpanded ? 'Read Less' : 'Read More'}
-              </button>
-            )}
-          </p>
 
           {showOutcomeList ? (
             <>

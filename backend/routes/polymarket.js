@@ -48,13 +48,22 @@ async function discoverCategoryTags(categoryKeywords, maxTags = 100) {
   }
 }
 
+// Helper to get event ID from a market (markets have an events array)
+function getEventId(market) {
+  if (market.events && market.events.length > 0) {
+    return market.events[0].id;
+  }
+  // Fallback to market id if no event
+  return null;
+}
+
 async function fetchMarketsForTags(tagIds, limit = 20, strategy = 'top') {
   console.log(
     `\n🚀 [FETCHING] ${tagIds.length} tags → target ${limit} markets (${strategy})`
   );
-  
+
   const allMarkets = [];
-  
+
   // Fetch from each tag in parallel
   const results = await Promise.all(
     tagIds.map(tagId =>
@@ -68,42 +77,95 @@ async function fetchMarketsForTags(tagIds, limit = 20, strategy = 'top') {
         })
     )
   );
-  
+
   results.forEach((markets, i) => {
     console.log(`   📊 Tag ${i + 1}: ${markets.length} markets`);
     allMarkets.push(...markets);
   });
-  
+
   console.log(`🔄 [RAW] Collected ${allMarkets.length} total markets before dedup`);
-  
-  // Deduplicate by ID
-  const uniqueMarketsMap = new Map();
+
+  // Deduplicate by event ID - only keep the highest volume market per event
+  // This prevents showing multiple markets from the same event (e.g., different date brackets)
+  const eventMarketsMap = new Map(); // eventId -> best market for that event
+  const noEventMarkets = new Map();  // marketId -> market (for markets with no event)
+
   allMarkets.forEach(market => {
-    if (market.id && !uniqueMarketsMap.has(market.id)) {
-      uniqueMarketsMap.set(market.id, market);
+    if (!market.id) return;
+
+    const eventId = getEventId(market);
+    const volume = market.volumeNum || parseFloat(market.volume) || 0;
+
+    if (eventId) {
+      // Market belongs to an event - keep only the highest volume one per event
+      const existing = eventMarketsMap.get(eventId);
+      const existingVolume = existing ? (existing.volumeNum || parseFloat(existing.volume) || 0) : 0;
+
+      if (!existing || volume > existingVolume) {
+        eventMarketsMap.set(eventId, market);
+      }
+    } else {
+      // No event - dedupe by market ID
+      if (!noEventMarkets.has(market.id)) {
+        noEventMarkets.set(market.id, market);
+      }
     }
   });
-  
-  const uniqueMarkets = Array.from(uniqueMarketsMap.values()).sort(
+
+  // Combine both sets of markets
+  const dedupedMarkets = [
+    ...Array.from(eventMarketsMap.values()),
+    ...Array.from(noEventMarkets.values())
+  ];
+
+  console.log(`🔄 [DEDUP] ${allMarkets.length} → ${dedupedMarkets.length} markets (${eventMarketsMap.size} events, ${noEventMarkets.size} standalone)`);
+
+  const uniqueMarkets = dedupedMarkets.sort(
     (a, b) => (b.volumeNum || 0) - (a.volumeNum || 0)
   );
 
   if (strategy !== 'balanced') {
     const finalMarkets = uniqueMarkets.slice(0, limit);
     console.log(
-      `✅ [RESULT] ${finalMarkets.length}/${limit} unique markets (total deduped: ${uniqueMarketsMap.size})`
+      `✅ [RESULT] ${finalMarkets.length}/${limit} unique markets`
     );
     return finalMarkets;
   }
 
   // Balanced strategy: round-robin per tag to diversify topics.
-  const perTagMarkets = results.map((markets) =>
-    (markets || [])
-      .filter((market) => market && market.id)
-      .sort((a, b) => (b.volumeNum || 0) - (a.volumeNum || 0))
-  );
+  // First, dedupe each tag's markets by event
+  const perTagMarkets = results.map((markets) => {
+    const tagEventMap = new Map();
+    const tagNoEventMap = new Map();
+
+    (markets || []).forEach(market => {
+      if (!market || !market.id) return;
+
+      const eventId = getEventId(market);
+      const volume = market.volumeNum || parseFloat(market.volume) || 0;
+
+      if (eventId) {
+        const existing = tagEventMap.get(eventId);
+        const existingVolume = existing ? (existing.volumeNum || parseFloat(existing.volume) || 0) : 0;
+        if (!existing || volume > existingVolume) {
+          tagEventMap.set(eventId, market);
+        }
+      } else {
+        if (!tagNoEventMap.has(market.id)) {
+          tagNoEventMap.set(market.id, market);
+        }
+      }
+    });
+
+    return [
+      ...Array.from(tagEventMap.values()),
+      ...Array.from(tagNoEventMap.values())
+    ].sort((a, b) => (b.volumeNum || 0) - (a.volumeNum || 0));
+  });
+
   const perTagIndices = new Array(perTagMarkets.length).fill(0);
-  const seen = new Set();
+  const seenMarkets = new Set();
+  const seenEvents = new Set();
   const balancedMarkets = [];
 
   while (balancedMarkets.length < limit) {
@@ -111,19 +173,29 @@ async function fetchMarketsForTags(tagIds, limit = 20, strategy = 'top') {
     for (let i = 0; i < perTagMarkets.length; i += 1) {
       const list = perTagMarkets[i];
       let idx = perTagIndices[i];
-      while (idx < list.length && seen.has(list[idx].id)) {
-        idx += 1;
+
+      // Skip markets we've already added or whose events we've seen
+      while (idx < list.length) {
+        const market = list[idx];
+        const eventId = getEventId(market);
+        if (seenMarkets.has(market.id) || (eventId && seenEvents.has(eventId))) {
+          idx += 1;
+        } else {
+          break;
+        }
       }
+
       perTagIndices[i] = idx;
       if (idx < list.length) {
         const market = list[idx];
+        const eventId = getEventId(market);
         perTagIndices[i] += 1;
-        if (!seen.has(market.id)) {
-          seen.add(market.id);
-          balancedMarkets.push(market);
-          added = true;
-          if (balancedMarkets.length >= limit) break;
-        }
+
+        seenMarkets.add(market.id);
+        if (eventId) seenEvents.add(eventId);
+        balancedMarkets.push(market);
+        added = true;
+        if (balancedMarkets.length >= limit) break;
       }
     }
     if (!added) break;
@@ -132,15 +204,17 @@ async function fetchMarketsForTags(tagIds, limit = 20, strategy = 'top') {
   if (balancedMarkets.length < limit) {
     for (const market of uniqueMarkets) {
       if (balancedMarkets.length >= limit) break;
-      if (!seen.has(market.id)) {
-        seen.add(market.id);
+      const eventId = getEventId(market);
+      if (!seenMarkets.has(market.id) && !(eventId && seenEvents.has(eventId))) {
+        seenMarkets.add(market.id);
+        if (eventId) seenEvents.add(eventId);
         balancedMarkets.push(market);
       }
     }
   }
-    
+
   console.log(
-    `✅ [RESULT] ${balancedMarkets.length}/${limit} unique markets (total deduped: ${uniqueMarketsMap.size})`
+    `✅ [RESULT] ${balancedMarkets.length}/${limit} unique markets`
   );
 
   return balancedMarkets;

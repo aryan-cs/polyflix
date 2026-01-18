@@ -4,6 +4,7 @@ import './App.css';
 import Navbar from './components/Navbar';
 import HomeScreen from './pages/HomeScreen';
 import MyWatchlists from './pages/MyWatchlists';
+import ProfilePage from './pages/ProfilePage';
 import Culture from './pages/Culture';
 import Politics from './pages/Politics';
 import Crypto from './pages/Crypto';
@@ -21,6 +22,7 @@ function App() {
           <Route path="/crypto" element={<Crypto />} />
           <Route path="/sports" element={<Sports />} />
           <Route path="/watchlists" element={<MyWatchlists />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </div>
     </Router>

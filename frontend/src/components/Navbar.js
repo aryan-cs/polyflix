@@ -149,7 +149,7 @@ function Navbar() {
               </div>
             )}
           </div>
-          <div className="navbar__avatar">
+          <div className="navbar__avatar" onClick={() => navigate('/profile')} style={{ cursor: 'pointer' }}>
             <span>P</span>
           </div>
         </div>

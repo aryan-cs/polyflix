@@ -1,0 +1,300 @@
+.profilePage {
+    padding-top: 100px;
+    background-color: #141414;
+    min-height: 100vh;
+    padding-left: 40px;
+    padding-right: 40px;
+    padding-bottom: 60px;
+}
+
+.profilePage__header {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+.profilePage__avatar {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, #e50914, #b20710);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    font-weight: bold;
+    color: white;
+}
+
+.profilePage__info h1 {
+    color: white;
+    font-size: 2.5rem;
+    margin: 0 0 8px 0;
+}
+
+.profilePage__memberSince {
+    color: #808080;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.profilePage__stats {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 30px;
+}
+
+/* AI Summary */
+.profilePage__aiSummary {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 1px solid #2a2a4a;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 40px;
+}
+
+.profilePage__aiIcon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: white;
+}
+
+.profilePage__aiContent {
+    flex: 1;
+}
+
+.profilePage__aiLabel {
+    display: inline-block;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+
+.profilePage__aiText {
+    color: #e0e0e0;
+    font-size: 1rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.profilePage__aiText--loading {
+    color: #808080;
+    font-style: italic;
+}
+
+.profilePage__aiText--empty {
+    color: #666;
+    font-style: italic;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.profilePage__aiText--loading {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.profilePage__statCard {
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    padding: 24px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 140px;
+}
+
+.profilePage__statNumber {
+    color: white;
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+
+.profilePage__statLabel {
+    color: #808080;
+    font-size: 0.9rem;
+    margin-top: 4px;
+}
+
+.profilePage__sections {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+.profilePage__section {
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    padding: 30px;
+}
+
+.profilePage__section h2 {
+    color: white;
+    font-size: 1.5rem;
+    margin: 0 0 8px 0;
+}
+
+.profilePage__sectionDesc {
+    color: #808080;
+    font-size: 0.9rem;
+    margin: 0 0 24px 0;
+}
+
+.profilePage__empty {
+    color: #555;
+    font-style: italic;
+}
+
+/* Keywords / Interest Tags */
+.profilePage__keywords {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.profilePage__keyword {
+    background-color: #2a2a2a;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.profilePage__keyword:hover {
+    background-color: #3a3a3a;
+    transform: scale(1.05);
+}
+
+.profilePage__keywordCount {
+    background-color: #e50914;
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+/* Category Breakdown */
+.profilePage__categories {
+    max-width: 600px;
+}
+
+.profilePage__categoryBars {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.profilePage__categoryRow {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.profilePage__categoryName {
+    color: white;
+    font-size: 0.95rem;
+    min-width: 80px;
+}
+
+.profilePage__categoryBarContainer {
+    flex: 1;
+    height: 24px;
+    background-color: #2a2a2a;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.profilePage__categoryBar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+.profilePage__categoryPercent {
+    color: #808080;
+    font-size: 0.9rem;
+    min-width: 45px;
+    text-align: right;
+}
+
+/* Dislikes */
+.profilePage__dislikes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.profilePage__dislike {
+    background-color: #3a2020;
+    color: #ff6b6b;
+    padding: 8px 14px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    border: 1px solid #5a3030;
+}
+
+.profilePage__dislikeMore {
+    background-color: #2a2a2a;
+    color: #808080;
+    padding: 8px 14px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .profilePage {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .profilePage__header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .profilePage__stats {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .profilePage__statCard {
+        min-width: 100px;
+        padding: 16px 24px;
+    }
+
+    .profilePage__statNumber {
+        font-size: 1.8rem;
+    }
+
+    .profilePage__categoryRow {
+        flex-wrap: wrap;
+    }
+
+    .profilePage__categoryName {
+        min-width: 100%;
+        margin-bottom: -8px;
+    }
+}

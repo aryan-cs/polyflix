@@ -19,6 +19,7 @@ function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatc
   const [aiMessages, setAiMessages] = useState([]);
   const [aiInput, setAiInput] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
+  const [suggestedQuestions, setSuggestedQuestions] = useState([]);
   const [username, setUsername] = useState(() => {
     // Use sessionStorage instead of localStorage so each tab has its own username
     const sessionUsername = sessionStorage.getItem(`polyflix_username_${market?.id}`);
@@ -83,6 +84,60 @@ function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatc
     if (bodyRef.current) {
       bodyRef.current.scrollTop = 0;
     }
+  }, [market]);
+
+  // Generate AI-powered suggested questions when market loads
+  useEffect(() => {
+    if (!market || aiMessages.length > 0) return;
+
+    const generateQuestions = async () => {
+      try {
+        const API_KEY = process.env.REACT_APP_GEMINI_API_KEY;
+        const URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
+
+        const response = await fetch(URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': API_KEY
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: `Generate 4 concise, specific questions a trader might ask about this prediction market. Make them actionable and directly related to the market topic.
+
+Market: "${market.title || market.question}"
+Category: ${market.category}
+
+Format your response as a JSON array with exactly 4 questions. Example:
+["Question 1?", "Question 2?", "Question 3?", "Question 4?"]
+
+Only return the JSON array, nothing else.`
+              }]
+            }]
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          try {
+            // Extract JSON array from response
+            const jsonMatch = text.match(/\[.*\]/s);
+            if (jsonMatch) {
+              const questions = JSON.parse(jsonMatch[0]);
+              setSuggestedQuestions(questions.slice(0, 4));
+            }
+          } catch (e) {
+            console.error('Error parsing questions:', e);
+          }
+        }
+      } catch (error) {
+        console.error('Error generating questions:', error);
+      }
+    };
+
+    generateQuestions();
   }, [market]);
 
   // Parse prices from Gamma API data
@@ -229,10 +284,14 @@ function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatc
         End Date: ${market.endDate || 'TBD'}
       `;
 
-      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=YOUR_GEMINI_API_KEY', {
+      const API_KEY = process.env.REACT_APP_GEMINI_API_KEY;
+      const URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
+
+      const response = await fetch(URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-goog-api-key': API_KEY
         },
         body: JSON.stringify({
           contents: [{
@@ -244,11 +303,18 @@ function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatc
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get response from AI');
+        const errorData = await response.json();
+        console.error('Gemini API Error:', errorData);
+        throw new Error(`API Error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
       }
 
       const data = await response.json();
-      const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not generate a response.';
+      let aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not generate a response.';
+      
+      // Keep responses concise - limit to first 500 characters if too long
+      if (aiText.length > 500) {
+        aiText = aiText.substring(0, 500).trim() + '...';
+      }
 
       // Add AI response to chat
       setAiMessages(prev => [...prev, {
@@ -262,12 +328,20 @@ function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatc
       setAiMessages(prev => [...prev, {
         id: Date.now() + 1,
         sender: 'ai',
-        text: '❌ Error: Unable to connect to AI. Please check your API key and try again.',
+        text: `❌ Error: ${error.message}`,
         timestamp: new Date().toLocaleTimeString()
       }]);
     } finally {
       setAiLoading(false);
     }
+  };
+
+  const handleSuggestedQuestion = (question) => {
+    setAiInput(question);
+    // Trigger the AI chat after setting input
+    setTimeout(() => {
+      handleAiChat();
+    }, 100);
   };
 
   useEffect(() => {
@@ -626,12 +700,6 @@ function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatc
               >
                 Watch Party
               </button>
-              <button
-                className={`marketModal__tab-btn ${activeTab === 'report' ? 'active' : ''}`}
-                onClick={() => setActiveTab('report')}
-              >
-                Report
-              </button>
             </div>
 
             <div className="marketModal__tabs-content">
@@ -663,6 +731,25 @@ function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatc
                         </div>
                       )}
                     </div>
+
+                    {aiMessages.length === 0 && !aiLoading && (
+                      <div className="marketModal__ai-suggestions">
+                        <p className="marketModal__ai-suggestions-title">💡 Try asking:</p>
+                        {suggestedQuestions.length > 0 ? (
+                          suggestedQuestions.map((question, index) => (
+                            <button
+                              key={index}
+                              className="marketModal__ai-suggestion-btn"
+                              onClick={() => handleSuggestedQuestion(question)}
+                            >
+                              {question}
+                            </button>
+                          ))
+                        ) : (
+                          <p style={{ color: '#888', fontSize: '0.9rem' }}>Loading suggestions...</p>
+                        )}
+                      </div>
+                    )}
 
                     <div className="marketModal__ai-input-container">
                       <input
@@ -737,13 +824,6 @@ function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatc
                       </button>
                     </div>
                   </div>
-                </div>
-              )}
-
-              {activeTab === 'report' && (
-                <div className="marketModal__tab-pane">
-                  <h4>Report</h4>
-                  <p>Report suspicious activity or inaccurate information...</p>
                 </div>
               )}
             </div>

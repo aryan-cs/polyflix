@@ -7,6 +7,9 @@ function MarketCard({ market, onSelectMarket }) {
   const [showVideo, setShowVideo] = useState(false);
   const hoverTimer = useRef(null);
 
+  // Normalize title - API returns "question", mock data uses "title"
+  const marketTitle = market.title || market.question || '';
+
   const handleOpen = () => {
     if (onSelectMarket) {
       onSelectMarket(market);
@@ -15,12 +18,12 @@ function MarketCard({ market, onSelectMarket }) {
 
   useEffect(() => {
     if (isHovered && !videoId) {
-      console.log(`🖱️ Hovered market: ${market.title}`);
+      console.log(`🖱️ Hovered market: ${marketTitle}`);
       // Fetch video on first hover
       const fetchVideo = async () => {
         try {
-          console.log(`🔍 Fetching video for: ${market.title}`);
-          const res = await fetch(`http://localhost:5002/api/video/search?query=${encodeURIComponent(market.title)}`);
+          console.log(`🔍 Fetching video for: ${marketTitle}`);
+          const res = await fetch(`http://localhost:5002/api/video/search?query=${encodeURIComponent(marketTitle)}`);
           if (res.ok) {
             const data = await res.json();
             console.log(`✅ Got video ID: ${data.videoId}`);
@@ -37,7 +40,7 @@ function MarketCard({ market, onSelectMarket }) {
       const fetchTimer = setTimeout(fetchVideo, 500);
       return () => clearTimeout(fetchTimer);
     }
-  }, [isHovered, market.title, videoId]);
+  }, [isHovered, marketTitle, videoId]);
 
   useEffect(() => {
     if (isHovered) {
@@ -73,9 +76,9 @@ function MarketCard({ market, onSelectMarket }) {
         <div className="marketCard__imageContainer">
           {videoId && showVideo && isHovered ? (
              <div className="marketCard__videoWrapper">
-               <iframe 
+               <iframe
                  src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&modestbranding=1&loop=1&playlist=${videoId}`}
-                 title={market.title}
+                 title={marketTitle}
                  frameBorder="0"
                  allow="autoplay; encrypted-media"
                  className="marketCard__video"
@@ -86,16 +89,16 @@ function MarketCard({ market, onSelectMarket }) {
               <img
                 className="marketCard__image"
                 src={market.image}
-                alt={market.title}
+                alt={marketTitle}
                 onClick={handleOpen}
               />
               <div className="marketCard__imageTitle">
-                {market.title}
+                {marketTitle}
               </div>
             </>
           ) : (
             <div className="marketCard__placeholder" onClick={handleOpen}>
-              <span className="marketCard__placeholderTitle">{market.title}</span>
+              <span className="marketCard__placeholderTitle">{marketTitle}</span>
             </div>
           )}
         </div>

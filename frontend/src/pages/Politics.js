@@ -94,7 +94,8 @@ const groupMarkets = (markets) => {
 
 function Politics() {
   const [selectedMarket, setSelectedMarket] = useState(null);
-  const [politicsMarkets, setPoliticsMarkets] = useState(marketData.politics);
+  const [politicsMarkets, setPoliticsMarkets] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { grouped, other } = useMemo(
     () => groupMarkets(politicsMarkets),
     [politicsMarkets]
@@ -109,14 +110,32 @@ function Politics() {
         const data = await response.json();
         if (Array.isArray(data.markets) && data.markets.length > 0) {
           setPoliticsMarkets(data.markets);
+        } else {
+          // Fallback to mock data if API returns empty
+          setPoliticsMarkets(marketData.politics);
         }
       } catch (error) {
         console.error('❌ Error fetching politics markets:', error);
+        // Fallback to mock data on error
+        setPoliticsMarkets(marketData.politics);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchPolitics();
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="politics">
+        <div className="politics__header">
+          <h2>Politics</h2>
+        </div>
+        <div className="politics__loading">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="politics">

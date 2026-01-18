@@ -74,7 +74,8 @@ const groupMarkets = (markets) => {
 
 function Sports() {
   const [selectedMarket, setSelectedMarket] = useState(null);
-  const [sportsMarkets, setSportsMarkets] = useState(marketData.sports);
+  const [sportsMarkets, setSportsMarkets] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { grouped, other } = useMemo(
     () => groupMarkets(sportsMarkets),
     [sportsMarkets]
@@ -89,14 +90,30 @@ function Sports() {
         const data = await response.json();
         if (Array.isArray(data.markets) && data.markets.length > 0) {
           setSportsMarkets(data.markets);
+        } else {
+          setSportsMarkets(marketData.sports);
         }
       } catch (error) {
         console.error('❌ Error fetching sports markets:', error);
+        setSportsMarkets(marketData.sports);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchSports();
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="sports">
+        <div className="sports__header">
+          <h2>Sports</h2>
+        </div>
+        <div className="sports__loading">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="sports">

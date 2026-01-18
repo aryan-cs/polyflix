@@ -16,6 +16,9 @@ function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatc
   const [activeTab, setActiveTab] = useState('overview');
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
+  const [aiMessages, setAiMessages] = useState([]);
+  const [aiInput, setAiInput] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
   const [username, setUsername] = useState(() => {
     // Use sessionStorage instead of localStorage so each tab has its own username
     const sessionUsername = sessionStorage.getItem(`polyflix_username_${market?.id}`);
@@ -60,7 +63,19 @@ function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatc
     setIsClosing(false);
     setIsExpanded(false);
     setShowWatchlistDropdown(false);
-    setChatMessages([]);
+    
+    // Load chat messages from localStorage for this market
+    const savedMessages = localStorage.getItem(`chat_${market.id}`);
+    if (savedMessages) {
+      try {
+        setChatMessages(JSON.parse(savedMessages));
+      } catch (e) {
+        setChatMessages([]);
+      }
+    } else {
+      setChatMessages([]);
+    }
+    
     if (closeTimerRef.current) {
       window.clearTimeout(closeTimerRef.current);
       closeTimerRef.current = null;
@@ -187,6 +202,74 @@ function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatc
     }
   };
 
+  const handleAiChat = async () => {
+    if (!aiInput.trim()) return;
+
+    const userMessage = aiInput.trim();
+    setAiInput('');
+    
+    // Add user message to chat
+    setAiMessages(prev => [...prev, {
+      id: Date.now(),
+      sender: 'user',
+      text: userMessage,
+      timestamp: new Date().toLocaleTimeString()
+    }]);
+
+    setAiLoading(true);
+
+    try {
+      // Create context about the market
+      const marketContext = `
+        Market Question: ${market.title || market.question}
+        Category: ${market.category}
+        Yes Price: ${yesPrice}¢
+        No Price: ${noPrice}¢
+        Volume: ${market.volumeNum ? `$${(market.volumeNum / 1000000).toFixed(1)}M` : 'Unknown'}
+        End Date: ${market.endDate || 'TBD'}
+      `;
+
+      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=YOUR_GEMINI_API_KEY', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `You are a helpful assistant analyzing prediction markets. Here is the market context:\n${marketContext}\n\nUser question: ${userMessage}\n\nProvide a concise, informative response about this market or the user's question.`
+            }]
+          }]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response from AI');
+      }
+
+      const data = await response.json();
+      const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not generate a response.';
+
+      // Add AI response to chat
+      setAiMessages(prev => [...prev, {
+        id: Date.now() + 1,
+        sender: 'ai',
+        text: aiText,
+        timestamp: new Date().toLocaleTimeString()
+      }]);
+    } catch (error) {
+      console.error('❌ AI Error:', error);
+      setAiMessages(prev => [...prev, {
+        id: Date.now() + 1,
+        sender: 'ai',
+        text: '❌ Error: Unable to connect to AI. Please check your API key and try again.',
+        timestamp: new Date().toLocaleTimeString()
+      }]);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   useEffect(() => {
     onCloseRef.current = onClose;
   }, [onClose]);
@@ -227,6 +310,13 @@ function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatc
     tabsHeaderRef.current.style.setProperty('--tab-left', `${left}px`);
     tabsHeaderRef.current.style.setProperty('--tab-width', `${width}px`);
   }, [activeTab]);
+
+  // Save chat messages to localStorage whenever they change
+  useEffect(() => {
+    if (market?.id && chatMessages.length > 0) {
+      localStorage.setItem(`chat_${market.id}`, JSON.stringify(chatMessages));
+    }
+  }, [chatMessages, market?.id]);
 
   // WebSocket connection for Watch Party
   useEffect(() => {
@@ -548,7 +638,51 @@ function MarketModal({ market, onClose, watchlists: propWatchlists, onToggleWatc
               {activeTab === 'overview' && (
                 <div className="marketModal__tab-pane">
                   <h4>Ask AI</h4>
-                  <p>AI analysis for this market coming soon...</p>
+                  <div className="marketModal__ai-chat">
+                    <div className="marketModal__ai-messages">
+                      {aiMessages.length === 0 ? (
+                        <div className="marketModal__ai-empty">
+                          <p>👋 Ask me anything about this market!</p>
+                          <p style={{ fontSize: '0.9rem', color: '#888' }}>Questions, analysis, predictions...</p>
+                        </div>
+                      ) : (
+                        aiMessages.map((msg) => (
+                          <div key={msg.id} className={`marketModal__ai-message marketModal__ai-message--${msg.sender}`}>
+                            <div className="marketModal__ai-sender">{msg.sender === 'user' ? 'You' : '🤖 AI'}</div>
+                            <div className="marketModal__ai-text">{msg.text}</div>
+                            <div className="marketModal__ai-timestamp">{msg.timestamp}</div>
+                          </div>
+                        ))
+                      )}
+                      {aiLoading && (
+                        <div className="marketModal__ai-message marketModal__ai-message--ai">
+                          <div className="marketModal__ai-sender">🤖 AI</div>
+                          <div className="marketModal__ai-text">
+                            <span className="marketModal__ai-loading">Thinking...</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="marketModal__ai-input-container">
+                      <input
+                        type="text"
+                        className="marketModal__ai-input"
+                        placeholder="Ask about this market..."
+                        value={aiInput}
+                        onChange={(e) => setAiInput(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && handleAiChat()}
+                        disabled={aiLoading}
+                      />
+                      <button
+                        className="marketModal__ai-send"
+                        onClick={handleAiChat}
+                        disabled={aiLoading || !aiInput.trim()}
+                      >
+                        {aiLoading ? '...' : 'Send'}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
 

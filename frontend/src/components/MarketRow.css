@@ -23,9 +23,8 @@
   gap: 6px;
   overflow-x: scroll;
   overflow-y: visible;
-  padding: 60px 0 140px;
-  margin-top: -40px;
-  margin-bottom: -140px;
+  padding: 60px 0 140px 40px;
+  margin: -40px 0 -140px -40px;
   scroll-behavior: smooth;
 }
 
@@ -79,8 +78,7 @@
   }
 
   .row__posters {
-    padding: 45px 0 110px;
-    margin-top: -25px;
-    margin-bottom: -110px;
+    padding: 45px 0 110px 24px;
+    margin: -25px 0 -110px -24px;
   }
 }

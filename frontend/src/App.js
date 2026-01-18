@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 import Navbar from './components/Navbar';
 import HomeScreen from './pages/HomeScreen';
-import MyWatchlists from './pages/MyWatchlists';
+import MyWatchlists, { initializeDefaultWatchlists } from './pages/MyWatchlists';
 import ProfilePage from './pages/ProfilePage';
 import Culture from './pages/Culture';
 import Politics from './pages/Politics';
@@ -13,6 +13,9 @@ import ForYou from './pages/ForYou';
 import SearchResults from './pages/SearchResults';
 
 function App() {
+  useEffect(() => {
+    initializeDefaultWatchlists();
+  }, []);
   return (
     <Router>
       <div className="app">

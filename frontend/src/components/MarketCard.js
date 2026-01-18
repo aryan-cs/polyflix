@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './MarketCard.css';
 import realImage from './images3.svg';
+import { toggleLikedMarket, isMarketLiked, getWatchlists, addMarketToWatchlist, removeMarketFromWatchlist, getWatchlistsContainingMarket } from '../pages/MyWatchlists';
 
 // Extract keywords from market title
 function extractKeywords(title) {
@@ -100,10 +101,65 @@ function MarketCard({ market, onSelectMarket }) {
   const [isHovered, setIsHovered] = useState(false);
   const [videoId, setVideoId] = useState(null);
   const [showVideo, setShowVideo] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [showWatchlistDropdown, setShowWatchlistDropdown] = useState(false);
+  const [watchlists, setWatchlists] = useState([]);
+  const [marketWatchlists, setMarketWatchlists] = useState([]);
   const hoverTimer = useRef(null);
+  const dropdownRef = useRef(null);
 
   // Normalize title - API returns "question", mock data uses "title"
   const marketTitle = market.title || market.question || '';
+
+  // Check if market is liked on mount and when market changes
+  useEffect(() => {
+    if (market?.id) {
+      setIsLiked(isMarketLiked(market.id));
+    }
+  }, [market?.id]);
+
+  // Load watchlists when dropdown opens
+  useEffect(() => {
+    if (showWatchlistDropdown) {
+      setWatchlists(getWatchlists());
+      setMarketWatchlists(getWatchlistsContainingMarket(market.id));
+    }
+  }, [showWatchlistDropdown, market.id]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowWatchlistDropdown(false);
+      }
+    };
+    if (showWatchlistDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showWatchlistDropdown]);
+
+  const handleLikeClick = (e) => {
+    e.stopPropagation();
+    toggleLikedMarket(market);
+    setIsLiked(!isLiked);
+  };
+
+  const handleAddToListClick = (e) => {
+    e.stopPropagation();
+    setShowWatchlistDropdown(!showWatchlistDropdown);
+  };
+
+  const handleWatchlistToggle = (watchlistId) => {
+    const isInWatchlist = marketWatchlists.includes(watchlistId);
+    if (isInWatchlist) {
+      removeMarketFromWatchlist(watchlistId, market.id);
+      setMarketWatchlists(marketWatchlists.filter(id => id !== watchlistId));
+    } else {
+      addMarketToWatchlist(watchlistId, market);
+      setMarketWatchlists([...marketWatchlists, watchlistId]);
+    }
+  };
 
   const handleOpen = () => {
     if (onSelectMarket) {
@@ -202,15 +258,44 @@ function MarketCard({ market, onSelectMarket }) {
             <div className="marketCard__content">
               <div className="marketCard__actions" onClick={(e) => e.stopPropagation()}>
                 <div className="marketCard__actions-left">
-                  <button className="marketCard__control marketCard__control--primary" aria-label="Play">
+                  <button className="marketCard__control marketCard__control--primary" aria-label="Play" onClick={handleOpen}>
                     <img src={realImage} alt="Play" style={{ width: '24px', height: '24px', filter: 'hue-rotate(0deg) saturate(0.3) brightness(1.2)' }} />
                   </button>
-                  <button className="marketCard__control" aria-label="Add to My List">
-                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
-                      <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 10V8.2c0-1.12 0-1.68.218-2.108a2 2 0 01.874-.874C4.52 5 5.08 5 6.2 5h11.6c1.12 0 1.68 0 2.108.218a2 2 0 01.874.874C21 6.52 21 7.08 21 8.2V10m-18 0h18m-18 0v6.8c0 1.12 0 1.68.218 2.108a2 2 0 00.874.874C4.52 19 5.08 19 6.2 19h11.6c1.12 0 1.68 0 2.108-.218a2 2 0 00.874-.874C21 17.48 21 16.92 21 15.8V10M9 13h1m4 0h1"/>
-                    </svg>
-                  </button>
-                  <button className="marketCard__control" aria-label="Like">
+                  <div className="marketCard__addToList" ref={dropdownRef}>
+                    <button
+                      className="marketCard__control"
+                      aria-label="Add to Watchlist"
+                      onClick={handleAddToListClick}
+                    >
+                      <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v14m-7-7h14"/>
+                      </svg>
+                    </button>
+                    {showWatchlistDropdown && (
+                      <div className="marketCard__watchlistDropdown">
+                        <div className="marketCard__watchlistDropdownTitle">Add to Watchlist</div>
+                        {watchlists.length === 0 ? (
+                          <div className="marketCard__watchlistEmpty">No watchlists yet</div>
+                        ) : (
+                          watchlists.map(watchlist => (
+                            <label key={watchlist.id} className="marketCard__watchlistItem">
+                              <input
+                                type="checkbox"
+                                checked={marketWatchlists.includes(watchlist.id)}
+                                onChange={() => handleWatchlistToggle(watchlist.id)}
+                              />
+                              <span>{watchlist.name}</span>
+                            </label>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    className={`marketCard__control ${isLiked ? 'marketCard__control--liked' : ''}`}
+                    aria-label={isLiked ? "Unlike" : "Like"}
+                    onClick={handleLikeClick}
+                  >
                     <svg viewBox="0 0 24 24" width="24" height="24" data-icon="ThumbsUpMedium" aria-hidden="true" fill="none">
                       <path fill="currentColor" fillRule="evenodd" d="M10.696 8.773A2 2 0 0 0 11 7.713V4h.838c.877 0 1.59.553 1.77 1.311C13.822 6.228 14 7.227 14 8a7 7 0 0 1-.246 1.75L13.432 11H17.5a1.5 1.5 0 0 1 1.476 1.77l-.08.445.28.354c.203.256.324.578.324.931s-.12.675-.324.93l-.28.355.08.445q.024.13.024.27c0 .49-.234.925-.6 1.2l-.4.3v.5a1.5 1.5 0 0 1-1.5 1.5h-3.877a9 9 0 0 1-2.846-.462l-1.493-.497A10.5 10.5 0 0 0 5 18.5v-4.747l2.036-.581a3 3 0 0 0 1.72-1.295zM10.5 2A1.5 1.5 0 0 0 9 3.5v4.213l-1.94 3.105a1 1 0 0 1-.574.432l-2.035.581A2 2 0 0 0 3 13.754v4.793c0 1.078.874 1.953 1.953 1.953.917 0 1.828.148 2.698.438l1.493.498a11 11 0 0 0 3.479.564H16.5a3.5 3.5 0 0 0 3.467-3.017 3.5 3.5 0 0 0 1.028-2.671c.32-.529.505-1.15.505-1.812s-.185-1.283-.505-1.812Q21 12.595 21 12.5A3.5 3.5 0 0 0 17.5 9h-1.566c.041-.325.066-.66.066-1 0-1.011-.221-2.194-.446-3.148C15.14 3.097 13.543 2 11.838 2z" clipRule="evenodd"></path>
                     </svg>

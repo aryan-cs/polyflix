@@ -6,11 +6,52 @@ import './MyWatchlists.css';
 
 export const WATCHLISTS_STORAGE_KEY = 'polyflix_watchlists';
 export const BLACKLIST_STORAGE_KEY = 'polyflix_blacklist';
+export const LIKED_MARKETS_ID = 'liked-markets';
 
 // Helper functions to manage watchlists from anywhere in the app
 export const getWatchlists = () => {
   const stored = localStorage.getItem(WATCHLISTS_STORAGE_KEY);
   return stored ? JSON.parse(stored) : [];
+};
+
+// Initialize default watchlists (call this on app startup)
+export const initializeDefaultWatchlists = () => {
+  const watchlists = getWatchlists();
+  const hasLikedMarkets = watchlists.some(w => w.id === LIKED_MARKETS_ID);
+
+  if (!hasLikedMarkets) {
+    const likedMarketsWatchlist = {
+      id: LIKED_MARKETS_ID,
+      name: 'Liked Markets',
+      markets: [],
+      isDefault: true // Mark as default so it can't be deleted
+    };
+    saveWatchlists([likedMarketsWatchlist, ...watchlists]);
+  }
+};
+
+// Toggle market in Liked Markets watchlist
+export const toggleLikedMarket = (market) => {
+  const watchlists = getWatchlists();
+  const likedWatchlist = watchlists.find(w => w.id === LIKED_MARKETS_ID);
+
+  if (!likedWatchlist) {
+    initializeDefaultWatchlists();
+    return toggleLikedMarket(market);
+  }
+
+  const isLiked = likedWatchlist.markets.some(m => m.id === market.id);
+
+  if (isLiked) {
+    return removeMarketFromWatchlist(LIKED_MARKETS_ID, market.id);
+  } else {
+    return addMarketToWatchlist(LIKED_MARKETS_ID, market);
+  }
+};
+
+// Check if a market is liked
+export const isMarketLiked = (marketId) => {
+  return isMarketInWatchlist(LIKED_MARKETS_ID, marketId);
 };
 
 export const saveWatchlists = (watchlists) => {

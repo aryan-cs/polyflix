@@ -3,7 +3,7 @@ import './Banner.css';
 import TradeButton from './TradeButton';
 import MoreInfoButton from './MoreInfoButton';
 
-function Banner({ market }) {
+function Banner({ market, onMoreInfo }) {
   const truncate = (str, n) => {
     return str?.length > n ? str.substr(0, n - 1) + '...' : str;
   };
